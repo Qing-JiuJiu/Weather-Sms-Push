@@ -8,12 +8,15 @@ import java.util.Base64;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.GZIPOutputStream;
 
+/**
+ * @author XinQi
+ */
 public class GzipUtills {
+
     /**
      * 文本数据gzip压缩
      */
     public static String gzipCompress(String text) {
-
         ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
         try (GZIPOutputStream gzipOutputStream = new GZIPOutputStream(byteArrayOutputStream)) {
             gzipOutputStream.write(text.getBytes(StandardCharsets.UTF_8));
