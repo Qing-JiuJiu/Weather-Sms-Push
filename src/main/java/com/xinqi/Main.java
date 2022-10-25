@@ -4,13 +4,14 @@ import com.xinqi.job.SendMessageJob;
 import com.xinqi.utils.ProjectUtils;
 import org.quartz.*;
 import org.quartz.impl.StdSchedulerFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.io.IOException;
 import java.net.URLDecoder;
 
 import java.util.Map;
-import java.util.logging.Logger;
 
 
 /**
@@ -18,7 +19,7 @@ import java.util.logging.Logger;
  */
 public class Main {
     public static void main(String[] args) throws IOException, SchedulerException {
-        Logger logger = Logger.getLogger("Main");
+        Logger logger = LoggerFactory.getLogger("Main");
 
         //获取类当前路径
         String path = Main.class.getProtectionDomain().getCodeSource().getLocation().getPath();

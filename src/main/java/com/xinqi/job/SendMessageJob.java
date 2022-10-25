@@ -9,13 +9,14 @@ import com.xinqi.utils.HttpsClientUtil;
 import com.xinqi.utils.ProjectUtils;
 import org.quartz.Job;
 import org.quartz.JobExecutionContext;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.net.URLEncoder;
 
 import java.util.List;
 import java.util.Map;
-import java.util.logging.Logger;
 
 /**
  * @author XinQi
@@ -24,7 +25,7 @@ public class SendMessageJob implements Job {
 
     @Override
     public void execute(JobExecutionContext jobExecutionContext) {
-        Logger logger = Logger.getLogger("Job");
+        Logger logger = LoggerFactory.getLogger("Job");
         String configPath = (String) jobExecutionContext.get("configPath");
 
         //读取配置文件，获得相关参数
