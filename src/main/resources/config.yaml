@@ -1,0 +1,22 @@
+#此文件作为配置文件参考，可复制该文件到jar包目录下进行配置
+
+#发送短信列表
+addressee:
+  - 'xxxxxxxxxxx'
+
+#和风天气API，官网：https://www.qweather.com/
+##私钥
+weather_key: 'xxxxxx'
+##地区
+region: '北京'
+
+#腾讯云短信API
+##API密钥
+SecretId: 'xxxxxx'
+SecretKey: 'xxxxxx'
+##短信应用ID
+sdkAppId: 'xxxxxx'
+##短信签名内容
+signName: 'xxxxxx'
+##短信模板ID
+templateId: 'xxxxxx'
