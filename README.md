@@ -9,7 +9,7 @@
 
 3. 使用mvn install命令编译成jar包
 
-4. 复制项目路resources下的config.yaml文件至jar包目录下
+4. 复制项目路径resources下的config.yaml文件至jar包目录下
 
 5. 修改配置文件
 
