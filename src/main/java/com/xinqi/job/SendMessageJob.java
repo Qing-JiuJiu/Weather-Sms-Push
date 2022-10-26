@@ -23,9 +23,12 @@ import java.util.Map;
  */
 public class SendMessageJob implements Job {
 
+    Logger logger = LoggerFactory.getLogger("Job");
+
     @Override
     public void execute(JobExecutionContext jobExecutionContext) {
-        Logger logger = LoggerFactory.getLogger("Job");
+        logger.info("开始执行每日发送天气信息");
+
         String configPath = (String) jobExecutionContext.getJobDetail().getJobDataMap().get("configPath");
 
         //读取配置文件，获得相关参数
@@ -139,6 +142,8 @@ public class SendMessageJob implements Job {
 
         //封装参数发送短信
         String[] parameter = {fxDate, locationName, textDay, humidity, tempMin + "℃ - " + tempMax + "℃", precip, windScaleNight, poetryPrefix, poetrySuffix};
-        logger.info("腾讯云短信发送API：" + SendSms.sendSms(secretId, secretKey, sdkAppId, signName, templateId, addresseeArray, parameter));
+        String smsResponse = SendSms.sendSms(secretId, secretKey, sdkAppId, signName, templateId, addresseeArray, parameter);
+        logger.info("腾讯云短信发送API：" + smsResponse);
+        logger.info(fxDate + "今日天气已推送，若无收到短信，请检查各项API日志内容。");
     }
 }
