@@ -40,7 +40,7 @@ public class Main {
         if ( 0 > hour  || hour > 23 || minute < 0 || minute > 59){
             logger.info("请检查配置文件time时间规范");
         }
-        String core = "0 "+ hour +" "+ minute +" * * ? *";
+        String core = "0 "+ minute +" "+ hour +" * * ? *";
         logger.info("已根据配置文件time：" + time + "，建立的Cron表达式：" + core);
 
         // 1.创建调度器 Scheduler
