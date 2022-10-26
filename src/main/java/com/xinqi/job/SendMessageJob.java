@@ -26,7 +26,7 @@ public class SendMessageJob implements Job {
     @Override
     public void execute(JobExecutionContext jobExecutionContext) {
         Logger logger = LoggerFactory.getLogger("Job");
-        String configPath = (String) jobExecutionContext.get("configPath");
+        String configPath = (String) jobExecutionContext.getJobDetail().getJobDataMap().get("configPath");
 
         //读取配置文件，获得相关参数
         Map<String, Object> config = ProjectUtils.readConfig(logger, configPath);
