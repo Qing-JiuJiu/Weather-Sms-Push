@@ -27,13 +27,13 @@ public class Main {
         path = path.replace(new File(path).getName(), "");
         path = (URLDecoder.decode(path, "UTF-8") + "config.yaml");
         path = new File(path).getPath();
-        logger.info("正在从当前目录下读取配置文件config.yaml，请检查配置文件内容是否正确，目录：" + path);
+        logger.info("正在从当前目录下读取配置文件config.yaml，请检查配置文件是否存在，目录：" + path);
 
         //读取配置文件
         Map<String, Object> config = ProjectUtils.readConfig(logger, path);
 
         //根据配置文件time内容配置七子表达式
-        String time = (String) config.get("time");
+        String time = String.valueOf(config.get("time"));
         String[] split = time.split(":");
         int hour = Integer.parseInt(split[0]);
         int minute = Integer.parseInt(split[1]);
@@ -62,6 +62,6 @@ public class Main {
         // 4.执行，开启调度器
         scheduler.scheduleJob(job, trigger);
         scheduler.start();
-        logger.info("已成功创建定时器任务，将在每日"+ time + "执行每日发送天气短信，请确保配置文件各项参数内容正确");
+        logger.info("已成功启动调度器，将在每日"+ time + "定时发送天气短信，请确保配置文件各项参数内容正确");
     }
 }

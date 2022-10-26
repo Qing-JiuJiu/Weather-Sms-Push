@@ -1,13 +1,14 @@
 #此文件作为配置文件参考，需复制该文件到jar包目录下进行配置
 
 #多少点开始 格式：00:00 时:分
-time: 07:00
+time: '07:00'
 
 #发送短信列表
 addressee:
   - 'xxxxxxxxxxx'
 
 #和风天气API，官网：https://www.qweather.com/
+##控制台：https://console.qweather.com/#/console?lang=zh
 ##私钥
 weather_key: 'xxxxxx'
 ##地区
@@ -15,11 +16,17 @@ region: '北京'
 
 #腾讯云短信API
 ##API密钥
+##SecretId、SecretKey 查询: https://console.cloud.tencent.com/cam/capi
 SecretId: 'xxxxxx'
 SecretKey: 'xxxxxx'
 ##短信应用ID
+##应用 ID 可前往 [短信控制台](https://console.cloud.tencent.com/smsv2/app-manage) 查看
 sdkAppId: 'xxxxxx'
 ##短信签名内容
+##签名信息可前往 [国内短信](https://console.cloud.tencent.com/smsv2/csms-sign) 或 [国际/港澳台短信](https://console.cloud.tencent.com/smsv2/isms-sign) 的签名管理查看
 signName: 'xxxxxx'
 ##短信模板ID
+##模板 ID 可前往 [国内短信](https://console.cloud.tencent.com/smsv2/csms-template) 或 [国际/港澳台短信](https://console.cloud.tencent.com/smsv2/isms-template) 的正文模板管理查看
 templateId: 'xxxxxx'
+##默认代码模板参考，可自行修改代码配置模板
+##日期：{1} 地点：{2} 天气：{3} 湿度：{4} 温度：{5} 降水量：{6} 风力等级：{7} 好诗上句：{8} 好诗下句：{9}
