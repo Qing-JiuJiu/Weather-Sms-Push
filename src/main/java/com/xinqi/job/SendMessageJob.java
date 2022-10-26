@@ -12,7 +12,6 @@ import org.quartz.JobExecutionContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.IOException;
 import java.net.URLEncoder;
 
 import java.util.List;
@@ -29,6 +28,7 @@ public class SendMessageJob implements Job {
     public void execute(JobExecutionContext jobExecutionContext) {
         logger.info("开始执行每日发送天气信息");
 
+        //得到配置文件路径
         String configPath = (String) jobExecutionContext.getJobDetail().getJobDataMap().get("configPath");
 
         //读取配置文件，获得相关参数
@@ -52,17 +52,13 @@ public class SendMessageJob implements Job {
         addresseeList.forEach(addressee -> addresseeList.set(addresseeList.indexOf(addressee), "+86" + addressee));
         String[] addresseeArray = addresseeList.toArray(new String[0]);
 
-        //获得今日好诗的诗词
+        //获得今日好诗的诗词字符串
         byte[] response;
-        try {
-            response = HttpsClientUtil.httpsGet("https://v1.jinrishici.com/all");
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        }
         JsonNode jsonNode;
         try {
+            response = HttpsClientUtil.httpsGet("https://v1.jinrishici.com/all");
             jsonNode = new ObjectMapper().readTree(response);
-        } catch (IOException e) {
+        } catch (Exception e) {
             throw new RuntimeException(e);
         }
         logger.info("古诗词API：" + jsonNode);
@@ -87,7 +83,7 @@ public class SendMessageJob implements Job {
         if (split.length == 3) {
             poetryPrefix = split[0] + "，" + split[1] + "，";
             poetrySuffix = split[2];
-            //如果其中一个长度超过12就调换拼接
+            //如果其中一个长度超过12就调换拼接方式
             if (poetryPrefix.length()>12 || poetrySuffix.length()>12){
                 poetryPrefix = split[0] + "，";
                 poetrySuffix = split[1] + "，" + split[2];
@@ -115,12 +111,8 @@ public class SendMessageJob implements Job {
         //获得当天天气信息
         try {
             response = HttpsClientUtil.httpsGet("https://devapi.qweather.com/v7/weather/3d?location=" + locationId + "&key=" + weatherKey);
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        }
-        try {
             jsonNode = new ObjectMapper().readTree(GzipUtills.gzipDecompress(response));
-        } catch (JsonProcessingException e) {
+        } catch (Exception e) {
             throw new RuntimeException(e);
         }
         logger.info("和风天气天气获取API：" + jsonNode);

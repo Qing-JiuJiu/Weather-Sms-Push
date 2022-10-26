@@ -19,8 +19,8 @@ import java.util.Map;
  */
 public class Main {
 
-
     public static void main(String[] args) throws IOException, SchedulerException {
+        //得到该类日志
         Logger logger = LoggerFactory.getLogger("Main");
 
         //获取类当前路径
