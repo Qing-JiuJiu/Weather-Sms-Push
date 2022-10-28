@@ -3,20 +3,22 @@ package com.xinqi.job;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+
 import com.xinqi.api.SendSms;
 import com.xinqi.utils.GzipUtills;
 import com.xinqi.utils.HttpsClientUtil;
 import com.xinqi.utils.ProjectUtils;
+
 import org.quartz.Job;
 import org.quartz.JobExecutionContext;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
 import org.yaml.snakeyaml.DumperOptions;
 import org.yaml.snakeyaml.Yaml;
 
-import java.io.BufferedWriter;
-import java.io.FileWriter;
-import java.io.IOException;
+import java.io.*;
 import java.net.URLEncoder;
 
 import java.util.LinkedHashMap;
@@ -28,7 +30,7 @@ import java.util.Map;
  */
 public class SendMessageJob implements Job {
 
-    Logger logger = LoggerFactory.getLogger("Job");
+    Logger logger = LoggerFactory.getLogger(SendMessageJob.class);
 
     @Override
     public void execute(JobExecutionContext jobExecutionContext) {
@@ -38,7 +40,7 @@ public class SendMessageJob implements Job {
         String configPath = (String) jobExecutionContext.getJobDetail().getJobDataMap().get("configPath");
 
         //读取配置文件，获得相关参数
-        Map<String, Object> config = ProjectUtils.readConfig(logger, configPath);
+        Map<String, Object> config = ProjectUtils.readYamlConfig(logger, configPath);
         //和风天气私钥
         String weatherKey = (String) config.get("weather_key");
         //地区
@@ -121,6 +123,19 @@ public class SendMessageJob implements Job {
             regionName = jsonNode.get("name").asText();
             regionID = jsonNode.get("id").asText();
 
+            //判断有没有留空的最后一行，如果没有新建一行空的，用于写入正确的Yaml数据，因为测试到snakeyaml用map追加数据，如果map只追加一行数据不会自动换行，原因不明
+            //冷门写法，流会在结束后自动close，采用rw读写模式
+            try (RandomAccessFile randomAccessFile = new RandomAccessFile(configPath, "rw")) {
+                //将指针移动到最后一行的前两个字节，因为一个换行占两个字节，返回到空格前面读取下一个字节判断是否是空格字节
+                randomAccessFile.seek(randomAccessFile.length() - 2);
+                //如果读到的最后面两个字节码是13回车，然后是10换行/新行，那么就是新的行，不是就写入新的行
+                if (randomAccessFile.read() != '\r' && randomAccessFile.read() != '\n') {
+                    randomAccessFile.write(System.getProperty("line.separator").getBytes());
+                }
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+
             //将地区ID写入配置文件
             DumperOptions dumperOptions = new DumperOptions();
             dumperOptions.setDefaultFlowStyle(DumperOptions.FlowStyle.BLOCK);
@@ -132,7 +147,7 @@ public class SendMessageJob implements Job {
                 throw new RuntimeException(e);
             }
             BufferedWriter buffer = new BufferedWriter(writer);
-            LinkedHashMap<String, Object> map = new LinkedHashMap<>();
+            Map<String, Object> map = new LinkedHashMap<>();
             map.put("regionID", regionID);
             yaml.dump(map, buffer);
             try {
@@ -141,7 +156,7 @@ public class SendMessageJob implements Job {
             } catch (IOException e) {
                 throw new RuntimeException(e);
             }
-            logger.info("通过配置文件region:"+ region +"调用和风天气地区ID获取API得到" + regionName + "的regionID:" + regionID + "，已将regionID写入配置文件");
+            logger.info("通过配置文件region:" + region + "调用和风天气地区ID获取API得到" + regionName + "的regionID:" + regionID + "，已将regionID写入配置文件");
         } else {
             logger.info("已从配置文件读取到regionID，将直接使用regionID：" + regionID + "，若需要修改region，请删除regionID整行，否则获取的还是旧地区天气数据");
         }

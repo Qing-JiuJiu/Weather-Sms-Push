@@ -14,12 +14,11 @@ import com.tencentcloudapi.sms.v20210111.SmsClient;
 import com.tencentcloudapi.sms.v20210111.models.SendSmsRequest;
 import com.tencentcloudapi.sms.v20210111.models.SendSmsResponse;
 
-
 /**
  * Tencent Cloud Sms Sendsms
  */
 public class SendSms {
-    public static String sendSms(String secretId,String secretKey,String sdkAppId,String signName,String templateId,String[] addressee,String[] args){
+    public static String sendSms(String secretId, String secretKey, String sdkAppId, String signName, String templateId, String[] addressee, String[] args) {
         try {
             /* 必要步骤：
              * 实例化一个认证对象，入参需要传入腾讯云账户密钥对secretId，secretKey。

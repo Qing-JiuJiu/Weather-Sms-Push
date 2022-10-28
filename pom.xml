@@ -45,10 +45,9 @@
             <version>2.3.2</version>
         </dependency>
         <dependency>
-            <groupId>org.slf4j</groupId>
-            <artifactId>slf4j-simple</artifactId>
-            <version>1.7.25</version>
-            <scope>compile</scope>
+            <groupId>ch.qos.logback</groupId>
+            <artifactId>logback-classic</artifactId>
+            <version>1.2.11</version>
         </dependency>
     </dependencies>
 
@@ -66,38 +65,19 @@
                             <goal>shade</goal>
                         </goals>
                         <configuration>
-                            <minimizeJar>true</minimizeJar>
                             <filters>
-                                <filter>
-                                    <artifact>*:*</artifact>
-                                    <excludes>
-                                        <exclude>META-INF/DEPENDENCIES</exclude>
-                                        <exclude>META-INF/LICENSE*</exclude>
-                                        <exclude>META-INF/NOTICE*</exclude>
-                                        <exclude>META-INF/MANIFEST*</exclude>
-                                        <exclude>META-INF/*.SF</exclude>
-                                        <exclude>META-INF/*.DSA</exclude>
-                                        <exclude>META-INF/*.RSA</exclude>
-                                    </excludes>
-                                </filter>
-                                <filter>
-                                    <artifact>commons-logging:commons-logging</artifact>
-                                    <includes>
-                                        <include>**</include>
-                                    </includes>
-                                </filter>
-                                <filter>
-                                    <artifact>org.quartz-scheduler:quartz</artifact>
-                                    <includes>
-                                        <include>**</include>
-                                    </includes>
-                                </filter>
-                                <filter>
-                                    <artifact>org.slf4j:slf4j-simple</artifact>
-                                    <includes>
-                                        <include>**</include>
-                                    </includes>
-                                </filter>
+                            <filter>
+                                <artifact>*:*</artifact>
+                                <excludes>
+                                    <exclude>META-INF/DEPENDENCIES</exclude>
+                                    <exclude>META-INF/LICENSE*</exclude>
+                                    <exclude>META-INF/NOTICE*</exclude>
+                                    <exclude>META-INF/MANIFEST*</exclude>
+                                    <exclude>META-INF/*.SF</exclude>
+                                    <exclude>META-INF/*.DSA</exclude>
+                                    <exclude>META-INF/*.RSA</exclude>
+                                </excludes>
+                            </filter>
                             </filters>
                             <transformers>
                                 <transformer

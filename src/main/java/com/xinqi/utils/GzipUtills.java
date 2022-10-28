@@ -37,14 +37,14 @@ public class GzipUtills {
         ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
         //如果需要解码使用
         //ByteArrayInputStream byteArrayInputStream = new ByteArrayInputStream(Base64.getDecoder().decode(text));
-        ByteArrayInputStream byteArrayInputStream = new ByteArrayInputStream(text,0,text.length);
-        try (GZIPInputStream gzipInputStream = new GZIPInputStream(byteArrayInputStream)){
+        ByteArrayInputStream byteArrayInputStream = new ByteArrayInputStream(text, 0, text.length);
+        try (GZIPInputStream gzipInputStream = new GZIPInputStream(byteArrayInputStream)) {
             byte[] buffer = new byte[256];
             int len;
             while ((len = gzipInputStream.read(buffer)) != -1) {
                 byteArrayOutputStream.write(buffer, 0, len);
             }
-        }catch (Exception e){
+        } catch (Exception e) {
             e.printStackTrace();
             return null;
         }
