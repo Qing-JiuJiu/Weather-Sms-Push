@@ -20,10 +20,7 @@ import org.yaml.snakeyaml.Yaml;
 import java.io.*;
 import java.net.URLEncoder;
 
-import java.util.Arrays;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 /**
  * @author XinQi
@@ -123,9 +120,9 @@ public class SendMessageJob implements Job {
             } catch (IOException e) {
                 throw new RuntimeException(e);
             }
-            logger.info("通过配置文件region:" + region + "调用和风天气地区ID获取API得到" + regionName + "的regionID:" + regionID + "，已将regionName、regionID写入配置文件");
+            logger.info("通过配置文件region:" + region + "调用和风天气地区ID获取API得到" + regionName + "的regionID:" + regionID + "，已将regionName、regionID写入配置文件，请确保regionName与region地区一致");
         } else {
-            logger.info("已从配置文件读取到regionID，将直接使用regionID：" + regionID + "，若需要修改region，请删除regionID整行，否则获取的还是旧地区天气数据");
+            logger.info("已从配置文件读取到regionID，将直接使用regionID：" + regionID + "，若需要修改region，请删除已将regionName、regionID整行，否则获取的还是旧地区天气数据");
         }
 
         //获得当天天气信息

@@ -4,6 +4,7 @@ package com.xinqi.utils;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 
+import java.io.UnsupportedEncodingException;
 import java.util.zip.GZIPInputStream;
 
 /**
@@ -14,7 +15,7 @@ public class GzipUtills {
     /**
      * 文本数据gzip解压
      */
-    public static String gzipDecompress(byte[] text) {
+    public static String gzipDecompress(byte[] text) throws UnsupportedEncodingException {
         ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
         ByteArrayInputStream byteArrayInputStream = new ByteArrayInputStream(text, 0, text.length);
         try (GZIPInputStream gzipInputStream = new GZIPInputStream(byteArrayInputStream)) {
@@ -28,6 +29,6 @@ public class GzipUtills {
             return null;
         }
 
-        return byteArrayOutputStream.toString();
+        return byteArrayOutputStream.toString("UTF-8");
     }
 }
