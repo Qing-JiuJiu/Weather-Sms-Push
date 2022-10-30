@@ -56,57 +56,23 @@ public class SendMessageJob implements Job {
         //templateId
         String templateId = (String) config.get("templateId");
         //收件人列表，该注解解除List警告，主要是因为读取来自配置文件，一定会是List<String>
-        @SuppressWarnings("unchecked")
-        List<String> addresseeList = (List<String>) config.get("addressee");
+        @SuppressWarnings("unchecked") List<String> addresseeList = (List<String>) config.get("addressee");
         addresseeList.forEach(addressee -> addresseeList.set(addresseeList.indexOf(addressee), "+86" + addressee));
         String[] addresseeArray = addresseeList.toArray(new String[0]);
 
-        //获得今日好诗的诗词字符串
-        String url = "https://v1.jinrishici.com/all";
-        logger.info("正在调用古诗词API获取古诗内容，请求地址：" + url);
-        byte[] response;
-        JsonNode jsonNode;
-        try {
-            response = HttpsClientUtil.httpsGet(url);
-            jsonNode = new ObjectMapper().readTree(response);
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        }
-        logger.info("古诗词API：" + jsonNode);
-        String poetry = jsonNode.get("content").asText();
+        //获得诗词
+        String[] poetry = getPoetry();
 
-        //处理内容，因为短信模板一次性最多12个字符，分成两段，诗词比较少出现一段12个字
-        String poetryPrefix;
-        String poetrySuffix;
-        String[] split = poetry.split("。");
-        //判断是否分割成功了，如果没有就分割其他符号
-        if ("".equals(split[split.length - 1]) || split.length != 2) {
-            split = poetry.split("？", 2);
-            poetryPrefix = split[0] + "？";
-            if ("".equals(split[split.length - 1]) || split.length != 2) {
-                split = poetry.split("，");
-                poetryPrefix = split[0] + "，";
-            }
-        } else {
-            poetryPrefix = split[0] + "。";
-        }
-        //如果分割出了长度为3，有可能是4+4+7这种类型诗词
-        if (split.length == 3) {
-            poetryPrefix = split[0] + "，" + split[1] + "，";
-            poetrySuffix = split[2];
-            //如果其中一个长度超过12就调换拼接方式
-            if (poetryPrefix.length() > 12 || poetrySuffix.length() > 12) {
-                poetryPrefix = split[0] + "，";
-                poetrySuffix = split[1] + "，" + split[2];
-            }
-        } else {
-            poetrySuffix = split[1];
-        }
+        //下面调用API通用变量
+        JsonNode jsonNode;
+        String url;
+        byte[] response;
 
         //获得和风天气地区代码和名字
         //先判断配置文件里是否存在天气地区代码，如果存在直接使用，减少Api调用次数
         String regionID = (String) config.get("regionID");
         String regionName = (String) config.get("regionName");
+        //如果地区代码不存在，调用API获得地区代码
         if (regionID == null) {
             //获取新的地区代码
             try {
@@ -189,10 +155,154 @@ public class SendMessageJob implements Job {
         String windScaleNight = jsonNode.get("windScaleDay").asText();
 
         //封装参数发送短信
-        String[] parameter = {fxDate, regionName, textDay, humidity, tempMin + "℃ - " + tempMax + "℃", precip, windScaleNight, poetryPrefix, poetrySuffix};
+        String[] parameter = {fxDate, regionName, textDay, humidity, tempMin + "℃ - " + tempMax + "℃", precip, windScaleNight, poetry[0], poetry[1]};
         logger.info("腾讯云传输parameter参数内容：" + Arrays.toString(parameter));
         String smsResponse = SendSmsApi.sendSms(secretId, secretKey, sdkAppId, signName, templateId, addresseeArray, parameter);
         logger.info("腾讯云短信发送API：" + smsResponse);
         logger.info(fxDate + "今日天气已推送，若无收到短信，请检查各项API日志内容。");
+    }
+
+    /**
+     * 获取随机一首诗词，并切分成前后两段
+     */
+    public String[] getPoetry() {
+        //获得今日好诗的诗词字符串
+        String url = "https://v1.jinrishici.com/all";
+        logger.info("正在调用古诗词API获取古诗内容，请求地址：" + url);
+        byte[] response;
+        JsonNode jsonNode;
+        try {
+            response = HttpsClientUtil.httpsGet(url);
+            jsonNode = new ObjectMapper().readTree(response);
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+        logger.info("古诗词API：" + jsonNode);
+        String poetry = jsonNode.get("content").asText();
+        //处理内容，因为短信模板一次性最多12个字符，分成前后两段，诗词比较少出现一段12个字
+        String poetryPrefix = null;
+        String poetrySuffix = null;
+        List<Character> stringList = Arrays.asList('，', '。', '！', '？');
+        boolean splitBoolean = true;
+        //尝试分割"。"
+        String[] split = poetry.split("。");
+        if (split.length == 2 && !"".equals(split[split.length - 1])) {
+            poetryPrefix = split[0] + "。";
+            poetrySuffix = split[1];
+            if (!stringList.contains(poetrySuffix.charAt(poetrySuffix.length() - 1))) {
+                poetrySuffix = poetrySuffix + "。";
+            }
+            if (poetryPrefix.length() > 12 || poetrySuffix.length() > 12) {
+                splitBoolean = false;
+            }
+        } else if (split.length == 3) {
+            poetryPrefix = split[0] + "。" + split[1] + "。";
+            poetrySuffix = split[2];
+            if (!stringList.contains(poetrySuffix.charAt(poetrySuffix.length() - 1))) {
+                poetrySuffix = poetrySuffix + "。";
+            }
+            if (poetryPrefix.length() > 12 || poetrySuffix.length() > 12) {
+                poetryPrefix = split[0] + "。";
+                poetrySuffix = split[1] + "。" + split[2];
+                if (!stringList.contains(poetrySuffix.charAt(poetrySuffix.length() - 1))) {
+                    poetrySuffix = poetrySuffix + "。";
+                }
+                if (poetryPrefix.length() > 12 || poetrySuffix.length() > 12) {
+                    splitBoolean = false;
+                }
+            }
+        } else {
+            splitBoolean = false;
+        }
+        //如果无法正确分割"，"，尝试分割"？"
+        if (!splitBoolean) {
+            split = poetry.split("？");
+            if (split.length == 2 && !"".equals(split[split.length - 1])) {
+                poetryPrefix = split[0] + "？";
+                poetrySuffix = split[1];
+                if (!stringList.contains(poetrySuffix.charAt(poetrySuffix.length() - 1))) {
+                    poetrySuffix = poetrySuffix + "？";
+                }
+                splitBoolean = poetryPrefix.length() <= 12 && poetrySuffix.length() <= 12;
+
+            } else if (split.length == 3) {
+                poetryPrefix = split[0] + "？" + split[1] + "？";
+                poetrySuffix = split[2];
+                if (!stringList.contains(poetrySuffix.charAt(poetrySuffix.length() - 1))) {
+                    poetrySuffix = poetrySuffix + "？";
+                }
+                splitBoolean = true;
+                if (poetryPrefix.length() > 12 || poetrySuffix.length() > 12) {
+                    poetryPrefix = split[0] + "？";
+                    poetrySuffix = split[1] + "？" + split[2];
+                    if (!stringList.contains(poetrySuffix.charAt(poetrySuffix.length() - 1))) {
+                        poetrySuffix = poetrySuffix + "？";
+                    }
+                    if (poetryPrefix.length() > 12 || poetrySuffix.length() > 12) {
+                        splitBoolean = false;
+                    }
+                }
+            }
+        }
+        //如果无法正确分割"？"，尝试分割"！"
+        if (!splitBoolean) {
+            split = poetry.split("！");
+            if (split.length == 2 && !"".equals(split[split.length - 1])) {
+                poetryPrefix = split[0] + "！";
+                poetrySuffix = split[1];
+                if (!stringList.contains(poetrySuffix.charAt(poetrySuffix.length() - 1))) {
+                    poetrySuffix = poetrySuffix + "！";
+                }
+                splitBoolean = poetryPrefix.length() <= 12 && poetrySuffix.length() <= 12;
+
+            } else if (split.length == 3) {
+                poetryPrefix = split[0] + "？" + split[1] + "！";
+                poetrySuffix = split[2];
+                if (!stringList.contains(poetrySuffix.charAt(poetrySuffix.length() - 1))) {
+                    poetrySuffix = poetrySuffix + "！";
+                }
+                splitBoolean = true;
+                if (poetryPrefix.length() > 12 || poetrySuffix.length() > 12) {
+                    poetryPrefix = split[0] + "！";
+                    poetrySuffix = split[1] + "！" + split[2];
+                    if (!stringList.contains(poetrySuffix.charAt(poetrySuffix.length() - 1))) {
+                        poetrySuffix = poetrySuffix + "！";
+                    }
+                    if (poetryPrefix.length() > 12 || poetrySuffix.length() > 12) {
+                        splitBoolean = false;
+                    }
+                }
+            }
+        }
+        //如果无法正确分割"！"，尝试分割"，"，如果还是无法正确分割，将直接执行回调函数。
+        if (!splitBoolean) {
+            split = poetry.split("，");
+            if (split.length == 2 && !"".equals(split[split.length - 1])) {
+                poetryPrefix = split[0] + "，";
+                poetrySuffix = split[1];
+                if (poetryPrefix.length() > 12 || poetrySuffix.length() > 12) {
+                    logger.warn("从古诗词API获取的诗词：\"" + poetry + "\"无法正确分割出两段，将重新调用古诗词API获取新的诗词");
+                    getPoetry();
+                }
+            } else if (split.length == 3) {
+                poetryPrefix = split[0] + "，" + split[1] + "，";
+                poetrySuffix = split[2];
+                if (poetryPrefix.length() > 12 || poetrySuffix.length() > 12) {
+                    poetryPrefix = split[0] + "，";
+                    poetrySuffix = split[1] + "，" + split[2];
+                    //回调函数
+                    if (poetryPrefix.length() > 12 || poetrySuffix.length() > 12) {
+                        logger.warn("从古诗词API获取的诗词：\"" + poetry + "\"无法正确分割出两段，将重新调用古诗词API获取新的诗词");
+                        getPoetry();
+                    }
+                }
+            } else {
+                logger.warn("从古诗词API获取的诗词：\"" + poetry + "\"无法正确分割出两段，将重新调用古诗词API获取新的诗词");
+                getPoetry();
+            }
+        }
+
+        //封装返回数据
+        return new String[]{poetryPrefix, poetrySuffix};
     }
 }
