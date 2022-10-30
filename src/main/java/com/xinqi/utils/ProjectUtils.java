@@ -14,8 +14,11 @@ import java.util.Map;
  */
 public class ProjectUtils {
 
-    public static Map<String, Object> readYamlConfig(Logger logger, String configPath) {
-        Map<String, Object> config = new HashMap<>();
+    /**
+     * 读取配置文件
+     */
+    public static Map<String, Object> readYamlConfig(String configPath, Logger logger) {
+        Map<String, Object> config = new HashMap<>(16);
         try {
             config = new Yaml().load(Files.newInputStream(Paths.get(configPath)));
         } catch (IOException e) {

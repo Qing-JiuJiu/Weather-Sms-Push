@@ -29,22 +29,22 @@ public class HttpsClientUtil {
 			URL url = new URL(urlStr);
 
 			if (urlStr.startsWith("https")) {
-				HttpsURLConnection httpsURLConnection = (HttpsURLConnection) url.openConnection();
+				HttpsURLConnection httpsUrlConnection = (HttpsURLConnection) url.openConnection();
 				HostnameVerifier ignoreHostnameVerifier = new MyHostnameVerifier();
 				SSLContext sslContext = SSLContext.getInstance("SSL", "SunJSSE");
 				sslContext.init(null, new TrustManager[]{new MyX509TrustManager()}, new SecureRandom());
-				httpsURLConnection.setConnectTimeout(10000);
-				httpsURLConnection.setReadTimeout(20000);
-				httpsURLConnection.setHostnameVerifier(ignoreHostnameVerifier);
-				httpsURLConnection.setSSLSocketFactory(sslContext.getSocketFactory());
-				httpsURLConnection.connect();
-				input = httpsURLConnection.getInputStream();
+				httpsUrlConnection.setConnectTimeout(10000);
+				httpsUrlConnection.setReadTimeout(20000);
+				httpsUrlConnection.setHostnameVerifier(ignoreHostnameVerifier);
+				httpsUrlConnection.setSSLSocketFactory(sslContext.getSocketFactory());
+				httpsUrlConnection.connect();
+				input = httpsUrlConnection.getInputStream();
 			} else {
-				HttpURLConnection httpURLConnection = (HttpURLConnection) url.openConnection();
-				httpURLConnection.setConnectTimeout(10000);
-				httpURLConnection.setReadTimeout(20000);
-				httpURLConnection.connect();
-				input = httpURLConnection.getInputStream();
+				HttpURLConnection httpUrlConnection = (HttpURLConnection) url.openConnection();
+				httpUrlConnection.setConnectTimeout(10000);
+				httpUrlConnection.setReadTimeout(20000);
+				httpUrlConnection.connect();
+				input = httpUrlConnection.getInputStream();
 			}
 			return toByteArray(input);
 		} catch (Exception e) {

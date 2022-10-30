@@ -13,9 +13,13 @@ import com.tencentcloudapi.sms.v20210111.SmsClient;
 // 导入要请求接口对应的request response类
 import com.tencentcloudapi.sms.v20210111.models.SendSmsRequest;
 import com.tencentcloudapi.sms.v20210111.models.SendSmsResponse;
+import org.slf4j.Logger;
+
+import java.util.Arrays;
 
 /**
  * Tencent Cloud Sms Sendsms
+ *
  * @author Tencent Cloud
  */
 public class SendSmsApi {
@@ -23,7 +27,10 @@ public class SendSmsApi {
     /**
      * 发送短信
      */
-    public static String sendSms(String secretId, String secretKey, String sdkAppId, String signName, String templateId, String[] addressee, String[] args) {
+    public static void sendSms(String secretId, String secretKey, String sdkAppId, String signName, String templateId, String[] addressee, String[] args, Logger logger) {
+
+        logger.info("传送给腾讯云短信参数：templateId：{}，parameter：{}", templateId, Arrays.toString(args));
+
         try {
             //实例化一个认证对象，入参需要传入腾讯云账户密钥对secretId，secretKey。
             //SecretId、SecretKey 查询: https://console.cloud.tencent.com/cam/capi
@@ -32,11 +39,6 @@ public class SendSmsApi {
             //实例化一个http选项，可选，没有特殊需求可以跳过
             HttpProfile httpProfile = new HttpProfile();
 
-            /* 设置代理（无需要直接忽略）
-             httpProfile.setProxyHost("真实代理ip");
-             httpProfile.setProxyPort(真实代理端口); */
-
-            //SDK默认使用POST方法
             httpProfile.setReqMethod("POST");
             //SDK有默认的超时时间，非必要请不要进行调整
             httpProfile.setConnTimeout(60);
@@ -97,22 +99,13 @@ public class SendSmsApi {
             //返回的 res 是一个 SendSmsResponse 类的实例，与请求对象对应
             SendSmsResponse res = client.SendSms(req);
 
-            //输出json格式的字符串回包
-            return SendSmsResponse.toJsonString(res);
-            //可以取出单个值，你可以通过官网接口文档或跳转到response对象的定义处查看返回字段的定义
-            //System.out.println(res.getRequestId());
+            logger.info("调用腾讯云发送短信API发送短信返回结果：{}", res);
 
-            /* 当出现以下错误码时，快速解决方案参考
-             * [FailedOperation.SignatureIncorrectOrUnapproved](https://cloud.tencent.com/document/product/382/9558#.E7.9F.AD.E4.BF.A1.E5.8F.91.E9.80.81.E6.8F.90.E7.A4.BA.EF.BC.9Afailedoperation.signatureincorrectorunapproved-.E5.A6.82.E4.BD.95.E5.A4.84.E7.90.86.EF.BC.9F)
-             * [FailedOperation.TemplateIncorrectOrUnapproved](https://cloud.tencent.com/document/product/382/9558#.E7.9F.AD.E4.BF.A1.E5.8F.91.E9.80.81.E6.8F.90.E7.A4.BA.EF.BC.9Afailedoperation.templateincorrectorunapproved-.E5.A6.82.E4.BD.95.E5.A4.84.E7.90.86.EF.BC.9F)
-             * [UnauthorizedOperation.SmsSdkAppIdVerifyFail](https://cloud.tencent.com/document/product/382/9558#.E7.9F.AD.E4.BF.A1.E5.8F.91.E9.80.81.E6.8F.90.E7.A4.BA.EF.BC.9Aunauthorizedoperation.smssdkappidverifyfail-.E5.A6.82.E4.BD.95.E5.A4.84.E7.90.86.EF.BC.9F)
-             * [UnsupportedOperation.ContainDomesticAndInternationalPhoneNumber](https://cloud.tencent.com/document/product/382/9558#.E7.9F.AD.E4.BF.A1.E5.8F.91.E9.80.81.E6.8F.90.E7.A4.BA.EF.BC.9Aunsupportedoperation.containdomesticandinternationalphonenumber-.E5.A6.82.E4.BD.95.E5.A4.84.E7.90.86.EF.BC.9F)
-             * 更多错误，可咨询[腾讯云助手](https://tccc.qcloud.com/web/im/index.html#/chat?webAppId=8fa15978f85cb41f7e2ea36920cb3ae1&title=Sms)
-             */
+            //输出json格式的字符串回包
+            SendSmsResponse.toJsonString(res);
 
         } catch (TencentCloudSDKException e) {
             e.printStackTrace();
-            return null;
         }
     }
 

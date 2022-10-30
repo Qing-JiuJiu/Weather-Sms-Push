@@ -10,7 +10,7 @@ import java.util.zip.GZIPInputStream;
 /**
  * @author XinQi
  */
-public class GzipUtills {
+public class GzipUtils {
 
     /**
      * 文本数据gzip解压

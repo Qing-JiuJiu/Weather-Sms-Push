@@ -18,20 +18,19 @@ import java.util.Map;
  */
 public class Main {
 
-    public static void main(String[] args) throws IOException, SchedulerException {
-        //得到该类日志
-        Logger logger = LoggerFactory.getLogger(Main.class);
+    static Logger logger = LoggerFactory.getLogger(Main.class);
 
+    public static void main(String[] args) throws IOException, SchedulerException {
         //获取类当前路径
         String configPath = Main.class.getProtectionDomain().getCodeSource().getLocation().getPath();
         //处理路径
         configPath = configPath.replace(new File(configPath).getName(), "");
         configPath = (URLDecoder.decode(configPath, "UTF-8") + "config.yaml");
         configPath = new File(configPath).getPath();
-        logger.info("正在从当前目录下读取配置文件config.yaml，请检查配置文件是否存在，目录：" + configPath);
 
         //读取配置文件
-        Map<String, Object> config = ProjectUtils.readYamlConfig(logger, configPath);
+        logger.info("正在从当前目录下读取配置文件config.yaml，请检查配置文件是否存在，目录：" + configPath);
+        Map<String, Object> config = ProjectUtils.readYamlConfig(configPath, logger);
 
         //根据配置文件time内容配置七子表达式
         String time = String.valueOf(config.get("time"));
@@ -40,6 +39,7 @@ public class Main {
         int minute = Integer.parseInt(split[1]);
         if (0 > hour || hour > 23 || minute < 0 || minute > 59) {
             logger.error("请检查配置文件time时间规范");
+            System.exit(0);
         }
         String cron = "0 " + minute + " " + hour + " * * ? *";
         logger.info("已根据配置文件time：" + time + "，建立的Cron表达式：" + cron);
