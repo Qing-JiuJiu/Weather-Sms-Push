@@ -1,10 +1,9 @@
 package com.xinqi.job;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-import com.xinqi.api.SendSms;
+import com.xinqi.api.SendSmsApi;
 import com.xinqi.utils.GzipUtills;
 import com.xinqi.utils.HttpsClientUtil;
 import com.xinqi.utils.ProjectUtils;
@@ -21,6 +20,7 @@ import org.yaml.snakeyaml.Yaml;
 import java.io.*;
 import java.net.URLEncoder;
 
+import java.util.Arrays;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -55,17 +55,19 @@ public class SendMessageJob implements Job {
         String signName = (String) config.get("signName");
         //templateId
         String templateId = (String) config.get("templateId");
-        //收件人列表
+        //收件人列表，该注解解除List警告，主要是因为读取来自配置文件，一定会是List<String>
+        @SuppressWarnings("unchecked")
         List<String> addresseeList = (List<String>) config.get("addressee");
         addresseeList.forEach(addressee -> addresseeList.set(addresseeList.indexOf(addressee), "+86" + addressee));
         String[] addresseeArray = addresseeList.toArray(new String[0]);
 
         //获得今日好诗的诗词字符串
-        logger.info("正在调用古诗词API获取古诗内容");
+        String url = "https://v1.jinrishici.com/all";
+        logger.info("正在调用古诗词API获取古诗内容，请求地址：" + url);
         byte[] response;
         JsonNode jsonNode;
         try {
-            response = HttpsClientUtil.httpsGet("https://v1.jinrishici.com/all");
+            response = HttpsClientUtil.httpsGet(url);
             jsonNode = new ObjectMapper().readTree(response);
         } catch (Exception e) {
             throw new RuntimeException(e);
@@ -104,18 +106,15 @@ public class SendMessageJob implements Job {
         //获得和风天气地区代码和名字
         //先判断配置文件里是否存在天气地区代码，如果存在直接使用，减少Api调用次数
         String regionID = (String) config.get("regionID");
-        String regionName = null;
+        String regionName = (String) config.get("regionName");
         if (regionID == null) {
-            logger.info("未在配置文件检测到regionID，正在通过配置文件调用和风天气地区ID获取API获取regionID，获取地区：" + region);
             //获取新的地区代码
             try {
-                response = HttpsClientUtil.httpsGet("https://geoapi.qweather.com/v2/city/lookup?key=" + weatherKey + "&location=" + URLEncoder.encode(region, "UTF8"));
-            } catch (Exception e) {
-                throw new RuntimeException(e);
-            }
-            try {
+                url = "https://geoapi.qweather.com/v2/city/lookup?key=" + weatherKey + "&location=" + URLEncoder.encode(region, "UTF8");
+                logger.info("未在配置文件检测到regionID，正在通过配置文件调用和风天气地区ID获取API获取regionID，获取地区：" + region + "，请求地址：" + url);
+                response = HttpsClientUtil.httpsGet(url);
                 jsonNode = new ObjectMapper().readTree(GzipUtills.gzipDecompress(response));
-            } catch (JsonProcessingException e) {
+            } catch (Exception e) {
                 throw new RuntimeException(e);
             }
             logger.info("和风天气地区ID获取API：" + jsonNode);
@@ -123,12 +122,13 @@ public class SendMessageJob implements Job {
             regionName = jsonNode.get("name").asText();
             regionID = jsonNode.get("id").asText();
 
+            //替换region和regionID
             //判断有没有留空的最后一行，如果没有新建一行空的，用于写入正确的Yaml数据，因为测试到snakeyaml用map追加数据，如果map只追加一行数据不会自动换行，原因不明
             //冷门写法，流会在结束后自动close，采用rw读写模式
             try (RandomAccessFile randomAccessFile = new RandomAccessFile(configPath, "rw")) {
-                //将指针移动到最后一行的前两个字节，因为一个换行占两个字节，返回到空格前面读取下一个字节判断是否是空格字节
+                //将指针移动到最后一行前两个字节，因为一个换行占两个字节，返回到空格前面读取下一个字节判断是否是空格字节
                 randomAccessFile.seek(randomAccessFile.length() - 2);
-                //如果读到的最后面两个字节码是13回车，然后是10换行/新行，那么就是新的行，不是就写入新的行
+                //如果读到的最后面两个字节码是13回车，然后是10换行/新行，那么就是新行，不是就写入新的行
                 if (randomAccessFile.read() != '\r' && randomAccessFile.read() != '\n') {
                     randomAccessFile.write(System.getProperty("line.separator").getBytes());
                 }
@@ -148,6 +148,7 @@ public class SendMessageJob implements Job {
             }
             BufferedWriter buffer = new BufferedWriter(writer);
             Map<String, Object> map = new LinkedHashMap<>();
+            map.put("regionName", regionName);
             map.put("regionID", regionID);
             yaml.dump(map, buffer);
             try {
@@ -156,15 +157,16 @@ public class SendMessageJob implements Job {
             } catch (IOException e) {
                 throw new RuntimeException(e);
             }
-            logger.info("通过配置文件region:" + region + "调用和风天气地区ID获取API得到" + regionName + "的regionID:" + regionID + "，已将regionID写入配置文件");
+            logger.info("通过配置文件region:" + region + "调用和风天气地区ID获取API得到" + regionName + "的regionID:" + regionID + "，已将regionName、regionID写入配置文件");
         } else {
             logger.info("已从配置文件读取到regionID，将直接使用regionID：" + regionID + "，若需要修改region，请删除regionID整行，否则获取的还是旧地区天气数据");
         }
 
         //获得当天天气信息
-        logger.info("正在通过和风天气天气获取API获取天气信息");
+        url = "https://devapi.qweather.com/v7/weather/3d?location=" + regionID + "&key=" + weatherKey;
+        logger.info("正在通过和风天气天气获取API获取天气信息，请求地址：" + url);
         try {
-            response = HttpsClientUtil.httpsGet("https://devapi.qweather.com/v7/weather/3d?location=" + regionID + "&key=" + weatherKey);
+            response = HttpsClientUtil.httpsGet(url);
             jsonNode = new ObjectMapper().readTree(GzipUtills.gzipDecompress(response));
         } catch (Exception e) {
             throw new RuntimeException(e);
@@ -188,7 +190,8 @@ public class SendMessageJob implements Job {
 
         //封装参数发送短信
         String[] parameter = {fxDate, regionName, textDay, humidity, tempMin + "℃ - " + tempMax + "℃", precip, windScaleNight, poetryPrefix, poetrySuffix};
-        String smsResponse = SendSms.sendSms(secretId, secretKey, sdkAppId, signName, templateId, addresseeArray, parameter);
+        logger.info("腾讯云传输parameter参数内容：" + Arrays.toString(parameter));
+        String smsResponse = SendSmsApi.sendSms(secretId, secretKey, sdkAppId, signName, templateId, addresseeArray, parameter);
         logger.info("腾讯云短信发送API：" + smsResponse);
         logger.info(fxDate + "今日天气已推送，若无收到短信，请检查各项API日志内容。");
     }

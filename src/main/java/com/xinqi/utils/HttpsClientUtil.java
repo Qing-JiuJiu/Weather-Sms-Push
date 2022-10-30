@@ -11,9 +11,7 @@ import java.security.cert.X509Certificate;
 
 /**
  * HTTPS请求工具类
- *
  * @author xiaoqqya
- * @version 2021/03/03
  */
 public class HttpsClientUtil {
 
@@ -30,8 +28,7 @@ public class HttpsClientUtil {
 		try {
 			URL url = new URL(urlStr);
 
-			boolean useHttps = urlStr.startsWith("https");
-			if (useHttps) {
+			if (urlStr.startsWith("https")) {
 				HttpsURLConnection httpsURLConnection = (HttpsURLConnection) url.openConnection();
 				HostnameVerifier ignoreHostnameVerifier = new MyHostnameVerifier();
 				SSLContext sslContext = SSLContext.getInstance("SSL", "SunJSSE");
