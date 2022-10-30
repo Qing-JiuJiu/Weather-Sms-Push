@@ -78,7 +78,7 @@ public class SendMessageJob implements Job {
         //处理内容，因为短信模板一次性最多12个字符，分成两段，诗词比较少出现一段12个字
         String poetryPrefix;
         String poetrySuffix;
-        String[] split = poetry.split("。", 2);
+        String[] split = poetry.split("。");
         //判断是否分割成功了，如果没有就分割其他符号
         if ("".equals(split[split.length - 1]) || split.length != 2) {
             split = poetry.split("？", 2);
