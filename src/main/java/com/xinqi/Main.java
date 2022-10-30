@@ -32,17 +32,19 @@ public class Main {
         logger.info("正在从当前目录下读取配置文件config.yaml，请检查配置文件是否存在，目录：" + configPath);
         Map<String, Object> config = ProjectUtils.readYamlConfig(configPath, logger);
 
+        //根据配置文件time获得时间
+        String timeRegularExpression = "^(?:[01]\\d|2[0-3]):[0-5]\\d$";
         //根据配置文件time内容配置七子表达式
         String time = String.valueOf(config.get("time"));
-        String[] split = time.split(":");
-        int hour = Integer.parseInt(split[0]);
-        int minute = Integer.parseInt(split[1]);
-        if (0 > hour || hour > 23 || minute < 0 || minute > 59) {
-            logger.error("请检查配置文件time时间规范");
-            System.exit(0);
+        String cron;
+        if (time.matches(timeRegularExpression)){
+            String[] split = time.split(":");
+            cron = "0 " + split[1] + " " + split[0] + " * * ? *";
+            logger.info("已根据配置文件time：" + time + "，建立的Cron表达式：" + cron);
+        } else {
+            cron = time;
+            logger.info("配置文件time的格式不为时间格式，将以Cron表达式直接使用，表达式为：" + cron + "，请确保表达式正确");
         }
-        String cron = "0 " + minute + " " + hour + " * * ? *";
-        logger.info("已根据配置文件time：" + time + "，建立的Cron表达式：" + cron);
 
         // 1.创建调度器 Scheduler
         SchedulerFactory factory = new StdSchedulerFactory();
