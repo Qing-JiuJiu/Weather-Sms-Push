@@ -2,6 +2,7 @@ package com.xinqi.utils;
 
 import javax.net.ssl.*;
 import java.io.ByteArrayOutputStream;
+import java.io.DataOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.HttpURLConnection;
@@ -23,7 +24,6 @@ public class HttpsClientUtil {
 	 * @author xiaoqqya
 	 */
 	public static byte[] httpsGet(String urlStr) throws Exception {
-
 		InputStream input;
 		try {
 			URL url = new URL(urlStr);
@@ -41,6 +41,49 @@ public class HttpsClientUtil {
 				input = httpsUrlConnection.getInputStream();
 			} else {
 				HttpURLConnection httpUrlConnection = (HttpURLConnection) url.openConnection();
+				httpUrlConnection.setConnectTimeout(10000);
+				httpUrlConnection.setReadTimeout(20000);
+				httpUrlConnection.connect();
+				input = httpUrlConnection.getInputStream();
+			}
+			return toByteArray(input);
+		} catch (Exception e) {
+			throw new Exception(e);
+		}
+	}
+
+	public static byte[] httpsPost(String urlStr,String data) throws Exception {
+		InputStream input;
+		try {
+			URL url = new URL(urlStr);
+
+			if (urlStr.startsWith("https")) {
+				HttpsURLConnection httpsUrlConnection = (HttpsURLConnection) url.openConnection();
+				HostnameVerifier ignoreHostnameVerifier = new MyHostnameVerifier();
+				SSLContext sslContext = SSLContext.getInstance("SSL", "SunJSSE");
+				sslContext.init(null, new TrustManager[]{new MyX509TrustManager()}, new SecureRandom());
+				httpsUrlConnection.setRequestMethod("POST");
+				//httpsUrlConnection.setRequestProperty("Content-Type","application/json");
+				httpsUrlConnection.setDoOutput(true);
+				DataOutputStream dataOutputStream = new DataOutputStream(httpsUrlConnection.getOutputStream());
+				dataOutputStream.writeBytes(data);
+				dataOutputStream.flush();
+				dataOutputStream.close();
+				httpsUrlConnection.setConnectTimeout(10000);
+				httpsUrlConnection.setReadTimeout(20000);
+				httpsUrlConnection.setHostnameVerifier(ignoreHostnameVerifier);
+				httpsUrlConnection.setSSLSocketFactory(sslContext.getSocketFactory());
+				httpsUrlConnection.connect();
+				input = httpsUrlConnection.getInputStream();
+			} else {
+				HttpURLConnection httpUrlConnection = (HttpURLConnection) url.openConnection();
+				httpUrlConnection.setRequestMethod("POST");
+				//httpUrlConnection.setRequestProperty("Content-Type","application/json");
+				httpUrlConnection.setDoOutput(true);
+				DataOutputStream dataOutputStream = new DataOutputStream(httpUrlConnection.getOutputStream());
+				dataOutputStream.writeBytes(data);
+				dataOutputStream.flush();
+				dataOutputStream.close();
 				httpUrlConnection.setConnectTimeout(10000);
 				httpUrlConnection.setReadTimeout(20000);
 				httpUrlConnection.connect();

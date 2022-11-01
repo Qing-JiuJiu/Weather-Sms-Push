@@ -4,11 +4,8 @@
 ##也可以直接使用Cron表达式，在线工具：https://www.pppet.net/
 time: '07:00'
 
-#发送短信列表
-addressee:
-  - 'xxxxxxxxxxx'
-
 #腾讯云短信API
+sms_enable: true
 ##API密钥
 ##SecretId、SecretKey 查询: https://console.cloud.tencent.com/cam/capi
 SecretId: 'xxxxxx'
@@ -22,16 +19,24 @@ signName: 'xxxxxx'
 ##短信模板ID
 ##模板 ID 可前往 [国内短信](https://console.cloud.tencent.com/smsv2/csms-template) 或 [国际/港澳台短信](https://console.cloud.tencent.com/smsv2/isms-template) 的正文模板管理查看
 templateId: 'xxxxxx'
+#发送短信列表
+addressee:
+  - 'xxxxxxxxxxx'
 ##默认代码模板参考，可自行修改代码配置模板
 ##日期：{1} 地点：{2} 天气：{3} 湿度：{4} 温度：{5} 降水量：{6} 风力等级：{7} 好诗上句：{8} 好诗下句：{9}
 
 #微信API
-##该功能暂未实现
 ##是否启用
 wechat_enable: true
 ##接口中心：http://mp.weixin.qq.com/debug/cgi-bin/sandboxinfo?action=showinfo&t=sandbox/index
 app_id: 'xxxxx'
 app_secret: 'xxxxxx'
+# 接收公众号消息模板id，模板设置参考
+##{{date.DATA}} 地区：{{region.DATA}} 天气：{{weather.DATA}} 气温：{{temp.DATA}} 湿度：{{humidity.DATA}} 降水量：{{precip.DATA}} 风力等级：{{windScaleNight.DATA}} 今日好诗：{{poetry.DATA}}
+template_id: 'xxxxxx'
+##接收消息的用户微信号id，不是手机显示的微信号，参考微信号id：o-Nb17hTYw8tRBz12JOYSgd5kabG
+receive_user:
+  - 'xxxxx'
 
 #和风天气API，官网：https://www.qweather.com/
 ##控制台：https://console.qweather.com/#/console?lang=zh
@@ -40,3 +45,4 @@ weather_key: 'xxxxxx'
 ##地区，不需要写市、镇等关键字，发送短信执行后会在最后添加regionName、regionId，分别是接口识别到的地区名称和地区ID
 ##请确保region与regionName内容一致，如若需要修改region，请删除regionName、regionId整行
 region: '北京'
+

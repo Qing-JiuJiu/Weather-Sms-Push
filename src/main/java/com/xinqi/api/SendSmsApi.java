@@ -99,10 +99,10 @@ public class SendSmsApi {
             //返回的 res 是一个 SendSmsResponse 类的实例，与请求对象对应
             SendSmsResponse res = client.SendSms(req);
 
-            logger.info("调用腾讯云发送短信API发送短信返回结果：{}", res);
-
             //输出json格式的字符串回包
-            SendSmsResponse.toJsonString(res);
+            String responseJson = SendSmsResponse.toJsonString(res);
+
+            logger.info("调用腾讯云发送短信API发送短信返回结果：{}", responseJson);
 
         } catch (TencentCloudSDKException e) {
             e.printStackTrace();

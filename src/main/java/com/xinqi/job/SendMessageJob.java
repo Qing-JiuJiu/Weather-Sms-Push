@@ -8,8 +8,7 @@ import com.xinqi.api.WeatherApi;
 
 import com.xinqi.utils.ProjectUtils;
 
-import org.quartz.Job;
-import org.quartz.JobExecutionContext;
+import org.quartz.*;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -24,13 +23,14 @@ import java.util.*;
 /**
  * @author XinQi
  */
-public class SendMessageJob implements Job {
 
-    Logger logger = LoggerFactory.getLogger(SendMessageJob.class);
+public class SendMessageJob implements Job{
+
+    static Logger logger = LoggerFactory.getLogger(SendMessageJob.class);
 
     @Override
     public void execute(JobExecutionContext jobExecutionContext) {
-        logger.info("开始执行每日发送天气信息");
+        logger.info("开始执行每日发送天气短信");
 
         //得到配置文件路径
         String configPath = (String) jobExecutionContext.getJobDetail().getJobDataMap().get("configPath");
@@ -139,8 +139,12 @@ public class SendMessageJob implements Job {
         //风力等级
         String windScaleNight = jsonNode.get("windScaleDay").asText();
 
+        //处理相关参数
+        //最低气温-最大气温
+        String temp = tempMin + "℃ - " + tempMax + "℃";
+
         //封装参数发送短信
-        String[] parameter = {fxDate, regionName, textDay, humidity, tempMin + "℃ - " + tempMax + "℃", precip, windScaleNight, poetry[0], poetry[1]};
+        String[] parameter = {fxDate, regionName, textDay, humidity, temp , precip, windScaleNight, poetry[0], poetry[1]};
         SendSmsApi.sendSms(secretId, secretKey, sdkAppId, signName, templateId, addresseeArray, parameter,logger);
         logger.info(fxDate + "今日天气已推送，若无收到短信，请检查各项API日志内容。");
     }
@@ -148,7 +152,7 @@ public class SendMessageJob implements Job {
     /**
      * 获取随机一首诗词，并切分成前后两段
      */
-    public String[] getPoetry() {
+    public static String[] getPoetry() {
         //获得今日好诗的诗词字符串
         JsonNode jsonNode;
         try {
@@ -285,4 +289,5 @@ public class SendMessageJob implements Job {
         //封装返回数据
         return new String[]{poetryPrefix, poetrySuffix};
     }
+
 }
