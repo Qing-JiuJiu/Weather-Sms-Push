@@ -37,7 +37,8 @@ public class Main {
         //根据配置文件time内容配置七子表达式
         String time = String.valueOf(config.get("time"));
         String cron;
-        if (time.matches(timeRegularExpression)) {
+        boolean cronMatches = time.matches(timeRegularExpression);
+        if (cronMatches) {
             String[] split = time.split(":");
             int hour = Integer.parseInt(split[0]);
             int minute = Integer.parseInt(split[1]);
@@ -66,7 +67,11 @@ public class Main {
         // 4.执行，开启调度器
         scheduler.scheduleJob(job, trigger);
         scheduler.start();
-        logger.info("已成功启动调度器来执行，将在每日" + time + "定时发送天气，请确保配置文件各项参数内容正确");
+        if (cronMatches) {
+            logger.info("已成功启动调度器来执行，将根据七子表达式: " + time + "定时发送天气内容，请确保配置文件各项参数内容正确");
+        } else {
+            logger.info("已成功启动调度器来执行，将在每日" + time + "定时发送天气内容，请确保配置文件各项参数内容正确");
+        }
     }
 
 }
