@@ -63,7 +63,6 @@ public class HttpsClientUtil {
 				SSLContext sslContext = SSLContext.getInstance("SSL", "SunJSSE");
 				sslContext.init(null, new TrustManager[]{new MyX509TrustManager()}, new SecureRandom());
 				httpsUrlConnection.setRequestMethod("POST");
-				//httpsUrlConnection.setRequestProperty("Content-Type","application/json");
 				httpsUrlConnection.setDoOutput(true);
 				DataOutputStream dataOutputStream = new DataOutputStream(httpsUrlConnection.getOutputStream());
 				dataOutputStream.writeBytes(data);
@@ -78,7 +77,6 @@ public class HttpsClientUtil {
 			} else {
 				HttpURLConnection httpUrlConnection = (HttpURLConnection) url.openConnection();
 				httpUrlConnection.setRequestMethod("POST");
-				//httpUrlConnection.setRequestProperty("Content-Type","application/json");
 				httpUrlConnection.setDoOutput(true);
 				DataOutputStream dataOutputStream = new DataOutputStream(httpUrlConnection.getOutputStream());
 				dataOutputStream.writeBytes(data);

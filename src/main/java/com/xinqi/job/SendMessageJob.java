@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 
 import com.xinqi.api.PoetryApi;
 import com.xinqi.api.SendSmsApi;
+import com.xinqi.api.WeChatApi;
 import com.xinqi.api.WeatherApi;
 
 import com.xinqi.utils.ProjectUtils;
@@ -30,7 +31,7 @@ public class SendMessageJob implements Job{
 
     @Override
     public void execute(JobExecutionContext jobExecutionContext) {
-        logger.info("开始执行每日发送天气短信");
+        logger.info("开始执行每日天气推送");
 
         //得到配置文件路径
         String configPath = (String) jobExecutionContext.getJobDetail().getJobDataMap().get("configPath");
@@ -41,30 +42,21 @@ public class SendMessageJob implements Job{
         String weatherKey = (String) config.get("weather_key");
         //地区
         String region = (String) config.get("region");
-        //SecretId
-        String secretId = (String) config.get("SecretId");
-        //SecretKey
-        String secretKey = (String) config.get("SecretKey");
-        //sdkAppId
-        String sdkAppId = (String) config.get("sdkAppId");
-        //signName
-        String signName = (String) config.get("signName");
-        //templateId
-        String templateId = (String) config.get("templateId");
-        //收件人列表，该注解解除List警告，主要是因为读取来自配置文件，一定会是List<String>
-        @SuppressWarnings("unchecked") List<String> addresseeList = (List<String>) config.get("addressee");
-        addresseeList.forEach(addressee -> addresseeList.set(addresseeList.indexOf(addressee), "+86" + addressee));
-        String[] addresseeArray = addresseeList.toArray(new String[0]);
 
-        //获得诗词
-        String[] poetry = getPoetry();
+        //获得今日好诗的诗词字符串
+        JsonNode jsonNode;
+        try {
+            jsonNode = PoetryApi.getPoetry(logger);
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+        String content = jsonNode.get("content").asText();
 
         //获得和风天气地区代码和名字
         //先判断配置文件里是否存在天气地区代码，如果存在直接使用，减少Api调用次数
         String regionId = (String) config.get("regionId");
         String regionName = (String) config.get("regionName");
         //如果地区代码不存在，调用API获得地区代码
-        JsonNode jsonNode;
         if (regionId == null) {
             //获取新的地区代码
             try {
@@ -143,25 +135,89 @@ public class SendMessageJob implements Job{
         //最低气温-最大气温
         String temp = tempMin + "℃ - " + tempMax + "℃";
 
-        //封装参数发送短信
-        String[] parameter = {fxDate, regionName, textDay, humidity, temp , precip, windScaleNight, poetry[0], poetry[1]};
-        SendSmsApi.sendSms(secretId, secretKey, sdkAppId, signName, templateId, addresseeArray, parameter,logger);
-        logger.info(fxDate + "今日天气已推送，若无收到短信，请检查各项API日志内容。");
+        //判断是否发送短信
+        if ((Boolean)config.get("sms_enable")) {
+            //从配置文件获取相关腾讯云短信API参数
+            //SecretId
+            String secretId = (String) config.get("SecretId");
+            //SecretKey
+            String secretKey = (String) config.get("SecretKey");
+            //sdkAppId
+            String sdkAppId = (String) config.get("sdkAppId");
+            //signName
+            String signName = (String) config.get("signName");
+            //templateId
+            String templateId = (String) config.get("templateId");
+            //收件人列表，该注解解除List警告，主要是因为读取来自配置文件，一定会是List<String>
+            @SuppressWarnings("unchecked") List<String> addresseeList = (List<String>) config.get("addressee");
+            addresseeList.forEach(addressee -> addresseeList.set(addresseeList.indexOf(addressee), "+86" + addressee));
+            String[] addresseeArray = addresseeList.toArray(new String[0]);
+
+            //再次处理参数因腾讯云短信限制的参数
+            //分割诗词，因为腾讯云一个参数最大长度为12
+            String[] splitPoetry;
+            try {
+                splitPoetry = splitPoetry(content);
+            } catch (Exception e) {
+                throw new RuntimeException(e);
+            }
+
+            //封装参数发送短信
+            String[] parameter = {fxDate, regionName, textDay, humidity, temp, precip, windScaleNight, splitPoetry[0], splitPoetry[1]};
+            SendSmsApi.sendSms(secretId, secretKey, sdkAppId, signName, templateId, addresseeArray, parameter, logger);
+            logger.info(fxDate + "今日天气已推送至短信，若无收到短信，请检查各项API日志内容。");
+        }
+
+        //判断是否发送微信公众平台
+        if ((Boolean)config.get("wechat_enable")) {
+            //从配置文件获取微信相关参数
+            String appId = (String) config.get("app_id");
+            String appSecret = (String) config.get("app_secret");
+            String templateId = (String) config.get("template_id");
+            //关注公众号用户
+            @SuppressWarnings("unchecked") List<String> receiveUserList = (List<String>) config.get("receive_user");
+
+            //拿到微信Token
+            try {
+                jsonNode = WeChatApi.getToken(appId, appSecret, logger);
+            } catch (Exception e) {
+                throw new RuntimeException(e);
+            }
+            String accessToken = jsonNode.get("access_token").asText();
+
+            //处理相关内容
+            //拼接诗词内容-作者-诗词名
+            String origin = jsonNode.get("origin").asText();
+            String author = jsonNode.get("author").asText();
+            String poetry = content + "——" + author + "《" + origin + "》";
+            //日期 + 星期几
+            String week = ProjectUtils.getDateWeekTime(fxDate);
+            fxDate = fxDate + " " + week;
+
+            //发送微信消息
+            //向所有用户发送微信消息
+            String finalFxDate = fxDate;
+            String finalRegionName = regionName;
+            receiveUserList.forEach(receiveUser -> {
+                //构建微信发送消息JSON
+                String weChatJson = "{\"touser\":\"" + receiveUser + "\"," + "\"template_id\":\"" + templateId + "\"," + "\"data\":{\"date\":{\"value\":\"" + finalFxDate + "\",\"color\":\"" + ProjectUtils.getColor() + "\"}," + "\"region\":{\"value\":\"" + finalRegionName + "\",\"color\":\"" + ProjectUtils.getColor() + "\"}," + "\"weather\":{\"value\":\"" + textDay + "\",\"color\":\"" + ProjectUtils.getColor() + "\"}," + "\"temp\":{\"value\":\"" + temp + "\",\"color\":\"" + ProjectUtils.getColor() + "\"}," + "\"humidity\":{\"value\":\"" + humidity + "\",\"color\":\"" + ProjectUtils.getColor() + "\"}," + "\"precip\":{\"value\":\"" + precip + "\",\"color\":\"" + ProjectUtils.getColor() + "\"}," + "\"windScaleNight\":{\"value\":\"" + windScaleNight + "\",\"color\":\"" + ProjectUtils.getColor() + "\"}," + "\"poetry\":{\"value\":\"" + poetry + "\",\"color\":\"" + ProjectUtils.getColor() + "\"}}}";
+                try {
+                    //发送微信消息
+                    WeChatApi.sendWeChat(accessToken, weChatJson, logger);
+                } catch (Exception e) {
+                    throw new RuntimeException(e);
+                }
+            });
+            logger.info("今日天气已推送至微信公众平台，若微信没收到消息，请检查各项API日志内容。");
+        }
+
+        logger.info("执行每日天气推送结束");
     }
 
     /**
      * 获取随机一首诗词，并切分成前后两段
      */
-    public static String[] getPoetry() {
-        //获得今日好诗的诗词字符串
-        JsonNode jsonNode;
-        try {
-            jsonNode = PoetryApi.getPoetry(logger);
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        }
-        String poetry = jsonNode.get("content").asText();
-
+    public static String[] splitPoetry(String poetry) throws Exception {
         //切分成前后两段
         //处理内容，因为短信模板一次性最多12个字符，分成前后两段，诗词比较少出现一段12个字
         String poetryPrefix = null;
@@ -266,7 +322,8 @@ public class SendMessageJob implements Job{
                 poetrySuffix = split[1];
                 if (poetryPrefix.length() > 12 || poetrySuffix.length() > 12) {
                     logger.warn("从古诗词API获取的诗词：\"" + poetry + "\"无法正确分割出两段，将重新调用古诗词API获取新的诗词");
-                    getPoetry();
+                    poetry = PoetryApi.getPoetry(logger).get("content").asText();
+                    splitPoetry(poetry);
                 }
             } else if (split.length == 3) {
                 poetryPrefix = split[0] + "，" + split[1] + "，";
@@ -277,12 +334,14 @@ public class SendMessageJob implements Job{
                     //回调函数
                     if (poetryPrefix.length() > 12 || poetrySuffix.length() > 12) {
                         logger.warn("从古诗词API获取的诗词：\"" + poetry + "\"无法正确分割出两段，将重新调用古诗词API获取新的诗词");
-                        getPoetry();
+                        poetry = PoetryApi.getPoetry(logger).get("content").asText();
+                        splitPoetry(poetry);
                     }
                 }
             } else {
                 logger.warn("从古诗词API获取的诗词：\"" + poetry + "\"无法正确分割出两段，将重新调用古诗词API获取新的诗词");
-                getPoetry();
+                poetry = PoetryApi.getPoetry(logger).get("content").asText();
+                splitPoetry(poetry);
             }
         }
 

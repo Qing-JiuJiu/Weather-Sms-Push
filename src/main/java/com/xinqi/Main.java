@@ -1,7 +1,6 @@
 package com.xinqi;
 
 import com.xinqi.job.SendMessageJob;
-import com.xinqi.job.SendWeChatMessageJob;
 import com.xinqi.utils.ProjectUtils;
 
 import org.quartz.*;
@@ -49,29 +48,25 @@ public class Main {
             logger.info("配置文件time的格式不为时间格式，将以Cron表达式直接使用，表达式为：" + cron + "，请确保表达式正确");
         }
 
+        if ((Boolean)config.get("wechat_enable") || (Boolean)config.get("sms_enable")) {
+            logger.info("配置文件未设置任何推送方式，请在配置文件设置wechat_enable 或 sms_enable为true，并确保对应推送方式API所需参数内容正确");
+            System.exit(0);
+        }
+
         // 1.创建调度器 Scheduler
         SchedulerFactory factory = new StdSchedulerFactory();
         Scheduler scheduler = factory.getScheduler();
 
         // 2.创建JobDetail实例，并与MyJob类绑定(Job执行内容)
+        JobDetail job = JobBuilder.newJob(SendMessageJob.class).withIdentity("job1", "group1").usingJobData("configPath", configPath).build();
 
-        // 3.构建Trigger实例,根据七子表达式绑定时间,根据配置文件是否启动相关配置
-        if ((Boolean) config.get("sms_enable")){
-            JobDetail job = JobBuilder.newJob(SendMessageJob.class).withIdentity("job1", "group1").usingJobData("configPath", configPath).build();
-            Trigger sms = TriggerBuilder.newTrigger().withIdentity("sms", "group1").startNow().withSchedule(CronScheduleBuilder.cronSchedule(cron)).build();
-            scheduler.scheduleJob(job, sms);
-            logger.info("已添加短信发送任务");
-        }
-        if ((Boolean) config.get("wechat_enable")) {
-            JobDetail job = JobBuilder.newJob(SendWeChatMessageJob.class).withIdentity("job2", "group1").usingJobData("configPath", configPath).build();
-            Trigger weChat = TriggerBuilder.newTrigger().withIdentity("wechat", "group1").startNow().withSchedule(CronScheduleBuilder.cronSchedule(cron)).build();
-            scheduler.scheduleJob(job, weChat);
-            logger.info("已添加微信发送任务");
-        }
+        // 3.构建Trigger实例,根据七子表达式绑定时间
+        Trigger trigger = TriggerBuilder.newTrigger().withIdentity("trigger1", "group1").startNow().withSchedule(CronScheduleBuilder.cronSchedule(cron)).build();
 
         // 4.执行，开启调度器
+        scheduler.scheduleJob(job, trigger);
         scheduler.start();
-        logger.info("已成功启动调度器来执行各个任务，将在每日" + time + "定时发送天气，请确保配置文件各项参数内容正确");
+        logger.info("已成功启动调度器来执行，将在每日" + time + "定时发送天气，请确保配置文件各项参数内容正确");
     }
 
 }

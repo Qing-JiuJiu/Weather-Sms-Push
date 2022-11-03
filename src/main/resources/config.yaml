@@ -1,11 +1,11 @@
 #此文件作为配置文件参考，请复制该文件到jar包目录下后再运行程序
 
 #多少点开始 格式：00:00 时:分
-##也可以直接使用Cron表达式，在线工具：https://www.pppet.net/
+##如果需要自定义时间，也可以直接使用Cron表达式，在线工具：https://www.pppet.net/
 time: '07:00'
 
 #腾讯云短信API
-sms_enable: true
+sms_enable: false
 ##API密钥
 ##SecretId、SecretKey 查询: https://console.cloud.tencent.com/cam/capi
 SecretId: 'xxxxxx'
@@ -27,7 +27,7 @@ addressee:
 
 #微信API
 ##是否启用
-wechat_enable: true
+wechat_enable: false
 ##接口中心：http://mp.weixin.qq.com/debug/cgi-bin/sandboxinfo?action=showinfo&t=sandbox/index
 app_id: 'xxxxx'
 app_secret: 'xxxxxx'
@@ -42,7 +42,6 @@ receive_user:
 ##控制台：https://console.qweather.com/#/console?lang=zh
 ##私钥
 weather_key: 'xxxxxx'
-##地区，不需要写市、镇等关键字，发送短信执行后会在最后添加regionName、regionId，分别是接口识别到的地区名称和地区ID
+##地区，不需要写市、镇等关键字，推送天气任务执行后会在最后添加regionName、regionId，分别是接口识别到的地区名称和地区ID
 ##请确保region与regionName内容一致，如若需要修改region，请删除regionName、regionId整行
 region: '北京'
-
