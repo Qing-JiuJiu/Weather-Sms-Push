@@ -1,4 +1,4 @@
-# Weather-Sms-Push
+# Weather-Push
 使用古诗词API、和风天气API、腾讯云发送短信API、微信公众平台API、Quartz定时器实现自动定时发送当天天气短信
 
 使用：
