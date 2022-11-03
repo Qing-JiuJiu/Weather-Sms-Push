@@ -68,9 +68,9 @@ public class Main {
         scheduler.scheduleJob(job, trigger);
         scheduler.start();
         if (cronMatches) {
-            logger.info("已成功启动调度器来执行，将根据七子表达式: " + time + "定时发送天气内容，请确保配置文件各项参数内容正确");
-        } else {
             logger.info("已成功启动调度器来执行，将在每日" + time + "定时发送天气内容，请确保配置文件各项参数内容正确");
+        } else {
+            logger.info("已成功启动调度器来执行，将根据七子表达式: " + time + "规则发送天气内容，请确保配置文件各项参数内容正确");
         }
     }
 
