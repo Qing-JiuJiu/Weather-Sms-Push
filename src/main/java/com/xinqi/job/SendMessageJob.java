@@ -44,18 +44,19 @@ public class SendMessageJob implements Job{
         String region = (String) config.get("region");
 
         //获得今日好诗的诗词字符串
-        JsonNode jsonNode;
+        JsonNode poetryJsonNode;
         try {
-            jsonNode = PoetryApi.getPoetry(logger);
+            poetryJsonNode = PoetryApi.getPoetry(logger);
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
-        String content = jsonNode.get("content").asText();
+        String content = poetryJsonNode.get("content").asText();
 
         //获得和风天气地区代码和名字
         //先判断配置文件里是否存在天气地区代码，如果存在直接使用，减少Api调用次数
         String regionId = (String) config.get("regionId");
         String regionName = (String) config.get("regionName");
+        JsonNode jsonNode;
         //如果地区代码不存在，调用API获得地区代码
         if (regionId == null) {
             //获取新的地区代码
@@ -187,8 +188,8 @@ public class SendMessageJob implements Job{
 
             //处理相关内容
             //拼接诗词内容-作者-诗词名
-            String origin = jsonNode.get("origin").asText();
-            String author = jsonNode.get("author").asText();
+            String origin = poetryJsonNode.get("origin").asText();
+            String author = poetryJsonNode.get("author").asText();
             String poetry = content + "——" + author + "《" + origin + "》";
             //日期 + 星期几
             String week = ProjectUtils.getDateWeekTime(fxDate);
