@@ -66,7 +66,7 @@ public class ProjectUtils {
         try{
             SimpleDateFormat sdf = new SimpleDateFormat( "yyyy-MM-dd" );
             Date date=sdf.parse(sDate);
-            SimpleDateFormat format = new SimpleDateFormat("EEEE");
+            SimpleDateFormat format = new SimpleDateFormat("EEEE", Locale.SIMPLIFIED_CHINESE);
             return format.format(date);
         }catch(Exception ex){
             System.out.println("TimeUtil getFullDateWeekTime Error:"+ex.getMessage());
