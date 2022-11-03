@@ -17,10 +17,10 @@ public class PoetryApi {
      */
     public static JsonNode getPoetry(Logger logger) throws Exception {
         String url = "https://v1.jinrishici.com/all";
-        logger.info("正在调用古诗词API获取古诗内容，请求地址：" + url);
+        logger.info("正在调用古诗词 API 获取古诗内容，请求地址: {}", url);
         byte[] response = HttpsClientUtil.httpsGet(url);
         JsonNode jsonNode = new ObjectMapper().readTree(response);
-        logger.info("调用古诗词API获取古诗内容返回结果：{}", jsonNode);
+        logger.info("调用古诗词 API 获取古诗内容返回结果: {}", jsonNode);
         return jsonNode;
     }
 }

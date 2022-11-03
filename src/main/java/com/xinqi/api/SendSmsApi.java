@@ -29,7 +29,7 @@ public class SendSmsApi {
      */
     public static void sendSms(String secretId, String secretKey, String sdkAppId, String signName, String templateId, String[] addressee, String[] args, Logger logger) {
 
-        logger.info("传送给腾讯云短信参数：templateId：{}，parameter：{}", templateId, Arrays.toString(args));
+        logger.info("传送给腾讯云短信参数 templateId: {}，parameter: {}", templateId, Arrays.toString(args));
 
         try {
             //实例化一个认证对象，入参需要传入腾讯云账户密钥对secretId，secretKey。
@@ -102,7 +102,7 @@ public class SendSmsApi {
             //输出json格式的字符串回包
             String responseJson = SendSmsResponse.toJsonString(res);
 
-            logger.info("调用腾讯云发送短信API发送短信返回结果：{}", responseJson);
+            logger.info("调用腾讯云发送短信 API 发送短信返回结果: {}", responseJson);
 
         } catch (TencentCloudSDKException e) {
             e.printStackTrace();

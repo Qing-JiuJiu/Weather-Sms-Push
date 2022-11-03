@@ -29,7 +29,7 @@ public class Main {
         configPath = new File(configPath).getPath();
 
         //读取配置文件
-        logger.info("正在从当前目录下读取配置文件config.yaml，请检查配置文件是否存在，目录：" + configPath);
+        logger.info("正在从当前目录下读取配置文件 config.yaml，请检查配置文件是否存在，目录: " + configPath);
         Map<String, Object> config = ProjectUtils.readYamlConfig(configPath, logger);
 
         //根据配置文件time获得时间
@@ -37,19 +37,19 @@ public class Main {
         //根据配置文件time内容配置七子表达式
         String time = String.valueOf(config.get("time"));
         String cron;
-        if (time.matches(timeRegularExpression)){
+        if (time.matches(timeRegularExpression)) {
             String[] split = time.split(":");
             int hour = Integer.parseInt(split[0]);
             int minute = Integer.parseInt(split[1]);
             cron = "0 " + minute + " " + hour + " * * ? *";
-            logger.info("已根据配置文件time：" + time + "，建立的Cron表达式：" + cron);
+            logger.info("已根据配置文件 time: " + time + "，建立的 Cron 表达式: " + cron);
         } else {
             cron = time;
-            logger.info("配置文件time的格式不为时间格式，将以Cron表达式直接使用，表达式为：" + cron + "，请确保表达式正确");
+            logger.info("配置文件 time 的格式不为时间格式，将以 Cron 表达式直接使用，表达式为: " + cron + "，请确保表达式正确");
         }
 
-        if ((Boolean)config.get("wechat_enable") || (Boolean)config.get("sms_enable")) {
-            logger.info("配置文件未设置任何推送方式，请在配置文件设置wechat_enable 或 sms_enable为true，并确保对应推送方式API所需参数内容正确");
+        if (!(Boolean) config.get("wechat_enable") || !(Boolean) config.get("sms_enable")) {
+            logger.info("配置文件未设置任何推送方式，请在配置文件设置 wechat_enable 及 sms_enable，并确保对应推送方式API所需参数内容正确");
             System.exit(0);
         }
 

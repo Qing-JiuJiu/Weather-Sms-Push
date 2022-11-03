@@ -60,7 +60,7 @@ public class SendMessageJob implements Job{
         if (regionId == null) {
             //获取新的地区代码
             try {
-                logger.info("未在配置文件检测到regionId，正在通过配置文件调用和风天气地区ID获取API获取regionId，获取地区：" + region);
+                logger.info("未在配置文件检测到 regionId，正在通过配置文件调用和风天气地区 ID 获取 API 获取 regionId，获取地区: " + region);
                 jsonNode = WeatherApi.getRegionId(weatherKey, region ,logger);
             } catch (Exception e) {
                 throw new RuntimeException(e);
@@ -104,9 +104,9 @@ public class SendMessageJob implements Job{
             } catch (IOException e) {
                 throw new RuntimeException(e);
             }
-            logger.info("通过配置文件region:" + region + "调用和风天气地区ID获取API得到" + regionName + "的regionId:" + regionId + "，已将regionName、regionId写入配置文件，请确保regionName与region地区一致");
+            logger.info("通过配置文件 region:" + region + "调用和风天气地区 ID 获取 API 得到" + regionName + "的 regionId: " + regionId + "，已将 regionName 和 regionId 写入配置文件，请确保 regionName 与 region 地区一致");
         } else {
-            logger.info("已从配置文件读取到regionId，将直接使用regionId：" + regionId + "，若需要修改region，请删除已将regionName、regionId整行，否则获取的还是旧地区天气数据");
+            logger.info("已从配置文件读取到 regionId，将直接使用 regionId: " + regionId + "，若需要修改 region，请删除已将 regionName 和 regionId 整行，否则获取的还是旧地区天气内容");
         }
 
         //获得当天天气信息
@@ -165,7 +165,7 @@ public class SendMessageJob implements Job{
             //封装参数发送短信
             String[] parameter = {fxDate, regionName, textDay, humidity, temp, precip, windScaleNight, splitPoetry[0], splitPoetry[1]};
             SendSmsApi.sendSms(secretId, secretKey, sdkAppId, signName, templateId, addresseeArray, parameter, logger);
-            logger.info(fxDate + "今日天气已推送至短信，若无收到短信，请检查各项API日志内容。");
+            logger.info(fxDate + "今日天气已推送至短信，若无收到短信，请检查各项 API 日志内容。");
         }
 
         //判断是否发送微信公众平台
@@ -208,7 +208,7 @@ public class SendMessageJob implements Job{
                     throw new RuntimeException(e);
                 }
             });
-            logger.info("今日天气已推送至微信公众平台，若微信没收到消息，请检查各项API日志内容。");
+            logger.info("今日天气已推送至微信公众平台，若微信没收到消息，请检查各项 API 日志内容。");
         }
 
         logger.info("执行每日天气推送结束");
@@ -321,7 +321,7 @@ public class SendMessageJob implements Job{
                 poetryPrefix = split[0] + "，";
                 poetrySuffix = split[1];
                 if (poetryPrefix.length() > 12 || poetrySuffix.length() > 12) {
-                    logger.warn("从古诗词API获取的诗词：\"" + poetry + "\"无法正确分割出两段，将重新调用古诗词API获取新的诗词");
+                    logger.warn("从古诗词 API 获取的诗词: \"" + poetry + "\"无法正确分割出两段，将重新调用古诗词 API 获取新的诗词");
                     poetry = PoetryApi.getPoetry(logger).get("content").asText();
                     splitPoetry(poetry);
                 }
@@ -333,13 +333,13 @@ public class SendMessageJob implements Job{
                     poetrySuffix = split[1] + "，" + split[2];
                     //回调函数
                     if (poetryPrefix.length() > 12 || poetrySuffix.length() > 12) {
-                        logger.warn("从古诗词API获取的诗词：\"" + poetry + "\"无法正确分割出两段，将重新调用古诗词API获取新的诗词");
+                        logger.warn("从古诗词 API 获取的诗词: \"" + poetry + "\"无法正确分割出两段，将重新调用古诗词 API 获取新的诗词");
                         poetry = PoetryApi.getPoetry(logger).get("content").asText();
                         splitPoetry(poetry);
                     }
                 }
             } else {
-                logger.warn("从古诗词API获取的诗词：\"" + poetry + "\"无法正确分割出两段，将重新调用古诗词API获取新的诗词");
+                logger.warn("从古诗词 API 获取的诗词: \"" + poetry + "\"无法正确分割出两段，将重新调用古诗词 API 获取新的诗词");
                 poetry = PoetryApi.getPoetry(logger).get("content").asText();
                 splitPoetry(poetry);
             }
