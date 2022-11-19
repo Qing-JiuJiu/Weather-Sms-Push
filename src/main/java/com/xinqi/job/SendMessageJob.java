@@ -214,7 +214,7 @@ public class SendMessageJob implements Job{
                     throw new RuntimeException(e);
                 }
             });
-            logger.info("今日天气已推送至微信公众平台，若微信没收到消息，请检查各项 API 日志内容。");
+            logger.info(fxDate + "今日天气已推送至微信公众平台，若微信没收到消息，请检查各项 API 日志内容。");
         }
 
         logger.info("执行每日天气推送结束");
