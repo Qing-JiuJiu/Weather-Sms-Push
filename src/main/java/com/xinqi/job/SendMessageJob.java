@@ -29,6 +29,11 @@ public class SendMessageJob implements Job{
 
     static Logger logger = LoggerFactory.getLogger(SendMessageJob.class);
 
+    /**
+    全局诗词，用于诗词如果无法分割时重新赋值给主方法。
+     */
+    String content;
+
     @Override
     public void execute(JobExecutionContext jobExecutionContext) {
         logger.info("开始执行每日天气推送");
@@ -50,7 +55,7 @@ public class SendMessageJob implements Job{
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
-        String content = poetryJsonNode.get("content").asText();
+        content = poetryJsonNode.get("content").asText();
 
         //获得和风天气地区代码和名字
         //先判断配置文件里是否存在天气地区代码，如果存在直接使用，减少Api调用次数
@@ -218,7 +223,7 @@ public class SendMessageJob implements Job{
     /**
      * 获取随机一首诗词，并切分成前后两段
      */
-    public static String[] splitPoetry(String poetry) throws Exception {
+    public String[] splitPoetry(String poetry) throws Exception {
         //切分成前后两段
         //处理内容，因为短信模板一次性最多12个字符，分成前后两段，诗词比较少出现一段12个字
         String poetryPrefix = null;
@@ -323,8 +328,8 @@ public class SendMessageJob implements Job{
                 poetrySuffix = split[1];
                 if (poetryPrefix.length() > 12 || poetrySuffix.length() > 12) {
                     logger.warn("从古诗词 API 获取的诗词: \"" + poetry + "\"无法正确分割出两段，将重新调用古诗词 API 获取新的诗词");
-                    poetry = PoetryApi.getPoetry(logger).get("content").asText();
-                    splitPoetry(poetry);
+                    content = PoetryApi.getPoetry(logger).get("content").asText();
+                    return splitPoetry(content);
                 }
             } else if (split.length == 3) {
                 poetryPrefix = split[0] + "，" + split[1] + "，";
@@ -335,14 +340,14 @@ public class SendMessageJob implements Job{
                     //回调函数
                     if (poetryPrefix.length() > 12 || poetrySuffix.length() > 12) {
                         logger.warn("从古诗词 API 获取的诗词: \"" + poetry + "\"无法正确分割出两段，将重新调用古诗词 API 获取新的诗词");
-                        poetry = PoetryApi.getPoetry(logger).get("content").asText();
-                        splitPoetry(poetry);
+                        content = PoetryApi.getPoetry(logger).get("content").asText();
+                        return splitPoetry(content);
                     }
                 }
             } else {
                 logger.warn("从古诗词 API 获取的诗词: \"" + poetry + "\"无法正确分割出两段，将重新调用古诗词 API 获取新的诗词");
-                poetry = PoetryApi.getPoetry(logger).get("content").asText();
-                splitPoetry(poetry);
+                content = PoetryApi.getPoetry(logger).get("content").asText();
+                return splitPoetry(content);
             }
         }
 
