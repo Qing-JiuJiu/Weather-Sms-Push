@@ -61,7 +61,7 @@ public class SendMessageJob implements Job{
         //先判断配置文件里是否存在天气地区代码，如果存在直接使用，减少Api调用次数
         String regionId = (String) config.get("regionId");
         String regionName = (String) config.get("regionName");
-        JsonNode jsonNode;
+        JsonNode jsonNode = null;
         //如果地区代码不存在，调用API获得地区代码
         if (regionId == null) {
             //获取新的地区代码
@@ -116,10 +116,15 @@ public class SendMessageJob implements Job{
         }
 
         //获得当天天气信息
-        try {
-            jsonNode =WeatherApi.getWeather(weatherKey, regionId, logger);
-        } catch (Exception e) {
-            throw new RuntimeException(e);
+        //有可能会出现网络问题，所以需要try catch
+        boolean isSuccess = false;
+        while (!isSuccess) {
+            try {
+                jsonNode = WeatherApi.getWeather(weatherKey, regionId, logger);
+                isSuccess = true;
+            } catch (Exception e) {
+                throw new RuntimeException(e);
+            }
         }
         jsonNode = jsonNode.get("daily").get(0);
         //日期
