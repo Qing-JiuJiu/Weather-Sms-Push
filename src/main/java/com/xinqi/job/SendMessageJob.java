@@ -25,12 +25,12 @@ import java.util.*;
  * @author XinQi
  */
 
-public class SendMessageJob implements Job{
+public class SendMessageJob implements Job {
 
     static Logger logger = LoggerFactory.getLogger(SendMessageJob.class);
 
     /**
-    全局诗词，用于诗词如果无法分割时重新赋值给主方法。
+     * 全局诗词，用于诗词如果无法分割时重新赋值给主方法。
      */
     String content;
 
@@ -64,12 +64,18 @@ public class SendMessageJob implements Job{
         JsonNode jsonNode = null;
         //如果地区代码不存在，调用API获得地区代码
         if (regionId == null) {
+            logger.info("未在配置文件检测到 regionId，正在通过配置文件调用和风天气地区 ID 获取 API 获取 regionId，获取地区: " + region);
+            boolean isSuccess = false;
             //获取新的地区代码
-            try {
-                logger.info("未在配置文件检测到 regionId，正在通过配置文件调用和风天气地区 ID 获取 API 获取 regionId，获取地区: " + region);
-                jsonNode = WeatherApi.getRegionId(weatherKey, region ,logger);
-            } catch (Exception e) {
-                throw new RuntimeException(e);
+            //可能会出现网络波动
+            while (!isSuccess) {
+                try {
+                    jsonNode = WeatherApi.getRegionId(weatherKey, region, logger);
+                    isSuccess = true;
+                } catch (Exception e) {
+                    logger.info("调用和风天气地区 ID 获取 API 获取 regionId 失败，将在抛出异常后重试");
+                    throw new RuntimeException(e);
+                }
             }
             jsonNode = jsonNode.get("location").get(0);
             regionName = jsonNode.get("name").asText();
@@ -123,6 +129,7 @@ public class SendMessageJob implements Job{
                 jsonNode = WeatherApi.getWeather(weatherKey, regionId, logger);
                 isSuccess = true;
             } catch (Exception e) {
+                logger.info("调用和风天气 API 获取天气信息失败，将在抛出异常后重试");
                 throw new RuntimeException(e);
             }
         }
@@ -147,7 +154,7 @@ public class SendMessageJob implements Job{
         String temp = tempMin + "℃ - " + tempMax + "℃";
 
         //判断是否发送短信
-        if ((Boolean)config.get("sms_enable")) {
+        if ((Boolean) config.get("sms_enable")) {
             //从配置文件获取相关腾讯云短信API参数
             //SecretId
             String secretId = (String) config.get("SecretId");
@@ -180,7 +187,7 @@ public class SendMessageJob implements Job{
         }
 
         //判断是否发送微信公众平台
-        if ((Boolean)config.get("wechat_enable")) {
+        if ((Boolean) config.get("wechat_enable")) {
             //从配置文件获取微信相关参数
             String appId = (String) config.get("app_id");
             String appSecret = (String) config.get("app_secret");
