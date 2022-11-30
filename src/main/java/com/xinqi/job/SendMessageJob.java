@@ -73,8 +73,10 @@ public class SendMessageJob implements Job {
                     jsonNode = WeatherApi.getRegionId(weatherKey, region, logger);
                     isSuccess = true;
                 } catch (Exception e) {
-                    logger.info("调用和风天气地区 ID 获取 API 获取 regionId 失败，将在抛出异常后重试");
-                    throw new RuntimeException(e);
+                    logger.info("调用和风天气地区 ID 获取 API 获取 regionId 失败，将在打印异常信息后重试");
+                    logger.error("异常信息: " + e.getMessage());
+                    execute(jobExecutionContext);
+                    return;
                 }
             }
             jsonNode = jsonNode.get("location").get(0);
@@ -129,8 +131,10 @@ public class SendMessageJob implements Job {
                 jsonNode = WeatherApi.getWeather(weatherKey, regionId, logger);
                 isSuccess = true;
             } catch (Exception e) {
-                logger.info("调用和风天气 API 获取天气信息失败，将在抛出异常后重试");
-                throw new RuntimeException(e);
+                logger.info("调用和风天气 API 获取天气信息失败，将在打印异常信息后重试");
+                logger.error("异常信息: " + e.getMessage());
+                execute(jobExecutionContext);
+                return;
             }
         }
         jsonNode = jsonNode.get("daily").get(0);
