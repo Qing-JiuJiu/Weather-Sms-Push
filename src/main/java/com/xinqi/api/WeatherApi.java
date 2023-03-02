@@ -18,10 +18,10 @@ public class WeatherApi {
      */
     public static JsonNode getRegionId(String weatherKey, String regionName, Logger logger) throws Exception {
         String url = "https://geoapi.qweather.com/v2/city/lookup?key=" + weatherKey + "&location=" + URLEncoder.encode(regionName, "UTF8");
-        logger.info("正在调用和风天气获取地区 ID 接口，请求地址: {}", url);
+        logger.info("正在调用和风天气获取地区 ID，请求地址: {}", url);
         byte[] response = HttpsClientUtil.httpsGet(url);
         JsonNode jsonNode = new ObjectMapper().readTree(GzipUtils.gzipDecompress(response));
-        logger.info("调用和风天气获取地区 ID 接口返回结果: {}", jsonNode);
+        logger.info("调用和风天气获取地区 ID 返回结果: {}", jsonNode);
         return jsonNode;
     }
 

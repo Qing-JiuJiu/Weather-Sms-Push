@@ -1,8 +1,27 @@
 #此文件作为配置文件参考，请复制该文件到jar包目录下后再运行程序
 
-#多少点开始 格式：00:00 时:分
-##如果需要自定义时间，也可以直接使用Cron表达式，在线工具：https://www.pppet.net/
+#---------------- 以下内容为ChatGPT相关设置 -----------------------
+#是否启用ChatGPT
+chatgpt_enable: false
+##chatgpt_api通过openai官网获取
+chatgpt_api: 'xxxxxxxxxxxxxx'
+
+##telegram_bot_token通过Telegram机器人@BotFather获取
+telegram_bot_token: 'xxxxxx'
+
+
+#---------------- 以下内容为天气推送相关设置 -----------------------
+#是否开始天气推送，必须至少开启其中一个推送方式
+weather_enable: false
+#推送时间，格式：时/分 如果需要自定义时间日期，也可以直接使用Cron表达式，在线工具：https://www.pppet.net/
 time: '07:00'
+
+#和风天气API，官网：https://www.qweather.com/，控制台：https://console.qweather.com/#/console?lang=zh
+##私钥
+weather_key: 'xxxxxx'
+##地区，不需要写市、镇等关键字，推送天气任务执行后会在最后添加regionName、regionId，分别是接口识别到的地区名称和地区ID
+##请确保region与regionName内容一致，如若需要修改region，请删除regionName、regionId整行
+region: '北京'
 
 #腾讯云短信API
 sms_enable: false
@@ -26,7 +45,6 @@ addressee:
 ##日期：{1} 地点：{2} 天气：{3} 湿度：{4} 温度：{5} 降水量：{6} 风力等级：{7} 好诗上句：{8} 好诗下句：{9}
 
 #微信API
-##是否启用
 wechat_enable: false
 ##接口中心：http://mp.weixin.qq.com/debug/cgi-bin/sandboxinfo?action=showinfo&t=sandbox/index
 app_id: 'xxxxx'
@@ -37,11 +55,3 @@ template_id: 'xxxxxx'
 ##接收消息的用户微信号id，不是手机显示的微信号，参考微信号id：o-Nb17hTYw8tRBz12JOYSgd5kabG
 receive_user:
   - 'xxxxx'
-
-#和风天气API，官网：https://www.qweather.com/
-##控制台：https://console.qweather.com/#/console?lang=zh
-##私钥
-weather_key: 'xxxxxx'
-##地区，不需要写市、镇等关键字，推送天气任务执行后会在最后添加regionName、regionId，分别是接口识别到的地区名称和地区ID
-##请确保region与regionName内容一致，如若需要修改region，请删除regionName、regionId整行
-region: '北京'
