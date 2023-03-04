@@ -2,12 +2,13 @@ package com.xinqi.job;
 
 import com.fasterxml.jackson.databind.JsonNode;
 
+import com.xinqi.Main;
 import com.xinqi.api.PoetryApi;
 import com.xinqi.api.SendSmsApi;
 import com.xinqi.api.WeChatApi;
 import com.xinqi.api.WeatherApi;
 
-import com.xinqi.utils.ProjectUtils;
+import com.xinqi.util.ProjectUtils;
 
 import org.quartz.*;
 
@@ -41,12 +42,10 @@ public class SendMessageJob implements Job {
         //得到配置文件路径
         String configPath = (String) jobExecutionContext.getJobDetail().getJobDataMap().get("configPath");
 
-        //读取配置文件，获得相关参数
-        Map<String, Object> config = ProjectUtils.readYamlConfig(configPath, logger);
         //和风天气私钥
-        String weatherKey = (String) config.get("weather_key");
+        String weatherKey = (String) Main.config.get("weather_key");
         //地区
-        String region = (String) config.get("region");
+        String region = (String) Main.config.get("region");
 
         //获得今日好诗的诗词字符串
         JsonNode poetryJsonNode;
@@ -59,12 +58,12 @@ public class SendMessageJob implements Job {
 
         //获得和风天气地区代码和名字
         //先判断配置文件里是否存在天气地区代码，如果存在直接使用，减少Api调用次数
-        String regionId = (String) config.get("regionId");
-        String regionName = (String) config.get("regionName");
+        String regionId = (String) Main.config.get("region_id");
+        String regionName = (String) Main.config.get("region_name");
         JsonNode jsonNode = null;
         //如果地区代码不存在，调用API获得地区代码
         if (regionId == null) {
-            logger.info("未在配置文件检测到 regionId，正在通过配置文件调用和风天气地区 ID 获取 API 获取 regionId，获取地区: " + region);
+            logger.info("未在配置文件检测到 region_id，正在通过配置文件调用和风天气地区 ID 获取 API 获取 region_id，获取地区: " + region);
             boolean isSuccess = false;
             //获取新的地区代码
             //可能会出现网络波动
@@ -73,7 +72,7 @@ public class SendMessageJob implements Job {
                     jsonNode = WeatherApi.getRegionId(weatherKey, region, logger);
                     isSuccess = true;
                 } catch (Exception e) {
-                    logger.info("调用和风天气地区 ID 获取 API 获取 regionId 失败，将在打印异常信息后重试");
+                    logger.info("调用和风天气地区 ID 获取 API 获取 region_id 失败，将在打印异常信息后重试");
                     logger.error("异常信息: " + e.getMessage());
                     execute(jobExecutionContext);
                     return;
@@ -109,8 +108,8 @@ public class SendMessageJob implements Job {
             }
             BufferedWriter buffer = new BufferedWriter(writer);
             Map<String, Object> map = new LinkedHashMap<>();
-            map.put("regionName", regionName);
-            map.put("regionId", regionId);
+            map.put("region_name", regionName);
+            map.put("region_id", regionId);
             yaml.dump(map, buffer);
             try {
                 buffer.close();
@@ -118,9 +117,9 @@ public class SendMessageJob implements Job {
             } catch (IOException e) {
                 throw new RuntimeException(e);
             }
-            logger.info("通过配置文件 region:" + region + "调用和风天气地区 ID 获取 API 得到" + regionName + "的 regionId: " + regionId + "，已将 regionName 和 regionId 写入配置文件，请确保 regionName 与 region 地区一致");
+            logger.info("通过配置文件 region:" + region + "调用和风天气地区 ID 获取 API 得到" + regionName + "的 region_id: " + regionId + "，已将 region_name 和 region_id 写入配置文件，请确保 region_name 与 region 地区一致");
         } else {
-            logger.info("已从配置文件读取到 regionId，将直接使用 regionId: " + regionId + "，若需要修改 region，请删除已将 regionName 和 regionId 整行，否则获取的还是旧地区天气内容");
+            logger.info("已从配置文件读取到 region_id，将直接使用 region_id: " + regionId + "，若需要修改 region，请删除已将 region_name 和 region_id 整行，否则获取的还是旧地区天气内容");
         }
 
         //获得当天天气信息
@@ -158,20 +157,20 @@ public class SendMessageJob implements Job {
         String temp = tempMin + "℃ - " + tempMax + "℃";
 
         //判断是否发送短信
-        if ((Boolean) config.get("sms_enable")) {
+        if ((Boolean) Main.config.get("sms_enable")) {
             //从配置文件获取相关腾讯云短信API参数
             //SecretId
-            String secretId = (String) config.get("SecretId");
+            String secretId = (String) Main.config.get("SecretId");
             //SecretKey
-            String secretKey = (String) config.get("SecretKey");
+            String secretKey = (String) Main.config.get("SecretKey");
             //sdkAppId
-            String sdkAppId = (String) config.get("sdkAppId");
+            String sdkAppId = (String) Main.config.get("sdkAppId");
             //signName
-            String signName = (String) config.get("signName");
+            String signName = (String) Main.config.get("signName");
             //templateId
-            String templateId = (String) config.get("templateId");
+            String templateId = (String) Main.config.get("templateId");
             //收件人列表，该注解解除List警告，主要是因为读取来自配置文件，一定会是List<String>
-            @SuppressWarnings("unchecked") List<String> addresseeList = (List<String>) config.get("addressee");
+            @SuppressWarnings("unchecked") List<String> addresseeList = (List<String>) Main.config.get("addressee");
             addresseeList.forEach(addressee -> addresseeList.set(addresseeList.indexOf(addressee), "+86" + addressee));
             String[] addresseeArray = addresseeList.toArray(new String[0]);
 
@@ -191,13 +190,13 @@ public class SendMessageJob implements Job {
         }
 
         //判断是否发送微信公众平台
-        if ((Boolean) config.get("wechat_enable")) {
+        if ((Boolean) Main.config.get("wechat_enable")) {
             //从配置文件获取微信相关参数
-            String appId = (String) config.get("app_id");
-            String appSecret = (String) config.get("app_secret");
-            String templateId = (String) config.get("template_id");
+            String appId = (String) Main.config.get("app_id");
+            String appSecret = (String) Main.config.get("app_secret");
+            String templateId = (String) Main.config.get("template_id");
             //关注公众号用户
-            @SuppressWarnings("unchecked") List<String> receiveUserList = (List<String>) config.get("receive_user");
+            @SuppressWarnings("unchecked") List<String> receiveUserList = (List<String>) Main.config.get("receive_user");
 
             //拿到微信Token
             try {

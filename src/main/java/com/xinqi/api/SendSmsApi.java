@@ -28,7 +28,6 @@ public class SendSmsApi {
      * 发送短信
      */
     public static void sendSms(String secretId, String secretKey, String sdkAppId, String signName, String templateId, String[] addressee, String[] args, Logger logger) {
-
         logger.info("传送给腾讯云短信参数 templateId: {}，parameter: {}", templateId, Arrays.toString(args));
 
         try {
@@ -103,7 +102,6 @@ public class SendSmsApi {
             String responseJson = SendSmsResponse.toJsonString(res);
 
             logger.info("调用腾讯云发送短信 API 发送短信返回结果: {}", responseJson);
-
         } catch (TencentCloudSDKException e) {
             e.printStackTrace();
         }

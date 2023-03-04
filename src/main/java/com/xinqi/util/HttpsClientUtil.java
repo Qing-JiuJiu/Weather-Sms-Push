@@ -1,4 +1,4 @@
-package com.xinqi.utils;
+package com.xinqi.util;
 
 import javax.net.ssl.*;
 import java.io.ByteArrayOutputStream;
@@ -88,34 +88,6 @@ public class HttpsClientUtil {
                 httpUrlConnection.connect();
                 input = httpUrlConnection.getInputStream();
             }
-            return toByteArray(input);
-        } catch (Exception e) {
-            throw new Exception(e);
-        }
-    }
-
-    public static byte[] httpsPostChatGpt(String urlStr, String data, String apiKey) throws Exception {
-        InputStream input;
-        try {
-            URL url = new URL(urlStr);
-            HttpsURLConnection httpsUrlConnection = (HttpsURLConnection) url.openConnection();
-            HostnameVerifier ignoreHostnameVerifier = new MyHostnameVerifier();
-            SSLContext sslContext = SSLContext.getInstance("SSL", "SunJSSE");
-            sslContext.init(null, new TrustManager[]{new MyX509TrustManager()}, new SecureRandom());
-            httpsUrlConnection.setRequestMethod("POST");
-            httpsUrlConnection.setRequestProperty("Content-Type", "application/json");
-            httpsUrlConnection.addRequestProperty("Authorization", "Bearer " + apiKey);
-            httpsUrlConnection.setDoOutput(true);
-            DataOutputStream dataOutputStream = new DataOutputStream(httpsUrlConnection.getOutputStream());
-            dataOutputStream.writeBytes(data);
-            dataOutputStream.flush();
-            dataOutputStream.close();
-            httpsUrlConnection.setConnectTimeout(10000);
-            httpsUrlConnection.setReadTimeout(20000);
-            httpsUrlConnection.setHostnameVerifier(ignoreHostnameVerifier);
-            httpsUrlConnection.setSSLSocketFactory(sslContext.getSocketFactory());
-            httpsUrlConnection.connect();
-            input = httpsUrlConnection.getInputStream();
             return toByteArray(input);
         } catch (Exception e) {
             throw new Exception(e);

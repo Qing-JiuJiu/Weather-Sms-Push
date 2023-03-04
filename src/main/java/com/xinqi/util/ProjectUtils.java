@@ -1,33 +1,14 @@
-package com.xinqi.utils;
-
-import org.slf4j.Logger;
-import org.yaml.snakeyaml.Yaml;
+package com.xinqi.util;
 
 import java.io.*;
-import java.nio.file.Files;
-import java.nio.file.Paths;
 import java.text.SimpleDateFormat;
 import java.util.*;
+import java.util.zip.GZIPInputStream;
 
 /**
  * @author XinQi
  */
 public class ProjectUtils {
-
-    /**
-     * 读取配置文件
-     */
-    public static Map<String, Object> readYamlConfig(String configPath, Logger logger) {
-        Map<String, Object> config = new HashMap<>(16);
-        try {
-            config = new Yaml().load(Files.newInputStream(Paths.get(configPath)));
-        } catch (IOException e) {
-            logger.error("无法从" + configPath + "该路径下获取配置文件，请检查该路径是否存在配置文件，配置文件内容参考可在https://github.com/Qing-JiuJiu/Weather-Sms-Push上查看config.yaml文件");
-            e.printStackTrace();
-            System.exit(0);
-        }
-        return config;
-    }
 
     /**
      * 获取随机颜色
@@ -72,5 +53,25 @@ public class ProjectUtils {
             System.out.println("TimeUtil getFullDateWeekTime Error:"+ex.getMessage());
             return "";
         }
+    }
+
+    /**
+     * 文本数据gzip解压
+     */
+    public static String gzipDecompress(byte[] text) throws UnsupportedEncodingException {
+        ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
+        ByteArrayInputStream byteArrayInputStream = new ByteArrayInputStream(text, 0, text.length);
+        try (GZIPInputStream gzipInputStream = new GZIPInputStream(byteArrayInputStream)) {
+            byte[] buffer = new byte[256];
+            int len;
+            while ((len = gzipInputStream.read(buffer)) != -1) {
+                byteArrayOutputStream.write(buffer, 0, len);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            return null;
+        }
+
+        return byteArrayOutputStream.toString("UTF-8");
     }
 }
